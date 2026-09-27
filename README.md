@@ -109,7 +109,7 @@ npm run dev
 The frontend should run on:
 
 ```text
-http://localhost:5173
+http://localhost:5174
 ```
 
 Open this address in your browser to access CareerConnect.
