@@ -50,3 +50,37 @@ git add .
 git commit -m "Fix merge conflict"
 git push origin dev
 ```
+
+## Running the Server
+
+Navigate to the server directory:
+
+```bash
+
+cd server
+
+```
+
+Install the project dependencies:
+
+```bash
+
+npm ci
+
+```
+
+Install Multer for resume file uploads:
+
+```bash
+
+npm install multer
+
+```
+
+Run the development server:
+
+```bash
+
+npm run dev
+
+```

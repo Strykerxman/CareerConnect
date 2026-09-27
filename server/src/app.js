@@ -8,7 +8,8 @@ function createApp() {
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/api/auth', require('./routes/auth'));
-  // Member C adds /api/profile and /api/resumes here
+  app.use('/api/profile', require('./routes/profile'));
+  app.use('/api/resume', require('./routes/resume'));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
   // eslint-disable-next-line no-unused-vars

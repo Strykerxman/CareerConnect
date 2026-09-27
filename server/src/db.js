@@ -22,7 +22,18 @@ CREATE TABLE IF NOT EXISTS profiles (
   company_name TEXT DEFAULT '',
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS resumes (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  original_name TEXT NOT NULL,
+  stored_name   TEXT NOT NULL,
+  file_type     TEXT NOT NULL,
+  file_size     INTEGER NOT NULL,
+  uploaded_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
+
 
 let db;
 
