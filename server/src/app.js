@@ -6,6 +6,7 @@ function createApp() {
   app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
   app.use(express.json({ limit: '100kb' }));
 
+  app.get('/', (req, res) => res.json({ app: "CareerConnect", desc: "A web-based platform designed to help job seekers manage their job search activities."}))
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/api/auth', require('./routes/auth'));
   app.use('/api/profile', require('./routes/profile'));
