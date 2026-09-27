@@ -84,3 +84,40 @@ Run the development server:
 npm run dev
 
 ```
+## Running the Client
+
+The CareerConnect frontend is built using React and Vite.
+
+Navigate to the client directory:
+
+```bash
+cd client
+```
+
+Install the project dependencies:
+
+```bash
+npm ci
+```
+
+Run the development client:
+
+```bash
+npm run dev
+```
+
+The frontend should run on:
+
+```text
+http://localhost:5173
+```
+
+Open this address in your browser to access CareerConnect.
+
+Make sure the backend server is also running on:
+
+```text
+http://localhost:4000
+```
+
+For the complete application to work, both the client and server should be running at the same time.
