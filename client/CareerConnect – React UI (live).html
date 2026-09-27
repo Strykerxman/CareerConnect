@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CareerConnect – React UI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#fff; --border:#e2e5ec; --text:#1c2130; --muted:#6b7280;
+  --brand:#3454d1; --brand-dark:#2540a8; --danger:#d6483f; --ok:#1f9d55;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#14161c;--panel:#1c1f28;--border:#2c303c;--text:#e7e9f0;--muted:#9aa0ae;}
+}
+:root[data-theme="dark"]{--bg:#14161c;--panel:#1c1f28;--border:#2c303c;--text:#e7e9f0;--muted:#9aa0ae;}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+button,input,textarea,select{font-family:inherit;}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:4px;}
+.topbar{position:sticky;top:0;padding-top:env(safe-area-inset-top,0px);z-index:10;background:var(--panel);border-bottom:1px solid var(--border);}
+.topbar-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 16px;flex-wrap:wrap;}
+.logo{font-weight:700;font-size:1.1rem;letter-spacing:-.02em;}
+.logo span{color:var(--brand);}
+.mainnav{display:flex;gap:4px;margin-left:8px;}
+.mainnav button{background:none;border:none;padding:8px 14px;border-radius:8px;font-size:.95rem;color:var(--muted);cursor:pointer;}
+.mainnav button.active{background:var(--brand);color:#fff;font-weight:600;}
+.role-toggle{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);}
+.role-toggle select{padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);}
+main.app-main{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
+h1{font-size:1.4rem;margin:0 0 4px;}
+.page-sub{color:var(--muted);font-size:.9rem;margin:0 0 20px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+.card h2{font-size:1rem;margin:0 0 14px;}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:.88rem;margin-bottom:16px;}
+.banner.ok{background:rgba(31,157,85,.12);color:var(--ok);border:1px solid rgba(31,157,85,.3);}
+.banner.err{background:rgba(214,72,63,.12);color:var(--danger);border:1px solid rgba(214,72,63,.3);}
+.banner-demo{display:flex;gap:8px;margin-bottom:16px;}
+.banner-demo button{font-size:.75rem;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer;}
+label{display:block;font-size:.82rem;font-weight:600;margin:14px 0 6px;}
+label:first-child{margin-top:0;}
+input[type=text],input[type=email],textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:.92rem;}
+textarea{resize:vertical;min-height:90px;}
+.hint{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.counter{text-align:right;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;border:1px solid transparent;font-size:.88rem;font-weight:600;cursor:pointer;}
+.btn-primary{background:var(--brand);color:#fff;}
+.btn-primary:hover{background:var(--brand-dark);}
+.btn-secondary{background:var(--panel);color:var(--text);border-color:var(--border);}
+.btn-row{display:flex;gap:10px;margin-top:18px;}
+.dropzone{border:2px dashed var(--border);border-radius:12px;padding:34px 16px;text-align:center;color:var(--muted);font-size:.9rem;cursor:pointer;transition:border-color .15s,background .15s;}
+.dropzone:hover,.dropzone:focus-visible{border-color:var(--brand);background:rgba(52,84,209,.05);}
+.dropzone.dragover{border-color:var(--brand);background:rgba(52,84,209,.08);}
+.dropzone strong{color:var(--text);}
+.upload-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;}
+.progress-track{flex:1;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;width:62%;background:var(--brand);}
+.error-example{margin-top:10px;font-size:.82rem;color:var(--danger);display:flex;gap:6px;align-items:center;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.tabs button{background:none;border:none;padding:9px 14px;font-size:.86rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tabs button.active{color:var(--brand);border-color:var(--brand);font-weight:600;}
+table{width:100%;border-collapse:collapse;font-size:.87rem;}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;padding:8px 6px;border-bottom:1px solid var(--border);}
+td{padding:10px 6px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.fname{font-weight:600;}
+.pill{font-size:.68rem;padding:2px 8px;border-radius:99px;background:rgba(52,84,209,.12);color:var(--brand);font-weight:600;}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.row-actions button{font-size:.76rem;padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;}
+.row-actions .del{color:var(--danger);border-color:rgba(214,72,63,.35);}
+.table-wrap{overflow-x:auto;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;}
+.modal{background:var(--panel);border-radius:12px;padding:20px;max-width:320px;width:100%;border:1px solid var(--border);}
+.modal h3{margin:0 0 8px;font-size:1rem;}
+.modal p{margin:0 0 16px;font-size:.87rem;color:var(--muted);}
+.modal .btn-row{margin-top:0;justify-content:flex-end;}
+@media (max-width:480px){.role-toggle{margin-left:0;width:100%;order:3;}.btn-row{flex-direction:column;}.btn-row .btn{width:100%;justify-content:center;}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+const ABOUT_LIMIT = 280;
+const RESUMES = [
+  { id: 1, name: "Resume_AlexChen_2026.pdf", size: "248 KB", date: "Sep 20, 2026", primary: true },
+  { id: 2, name: "Resume_SWE_Internship.pdf", size: "231 KB", date: "Aug 14, 2026", primary: false },
+  { id: 3, name: "Resume_v1.docx", size: "52 KB", date: "Jul 02, 2026", primary: false },
+];
+
+function AppLayout({ page, onNavigate, role, onRoleChange, children }) {
+  return (
+    <>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="logo">Career<span>Connect</span></div>
+          <nav className="mainnav" aria-label="Main">
+            <button className={page === "profile" ? "active" : ""} aria-current={page === "profile" ? "page" : undefined} onClick={() => onNavigate("profile")}>Profile</button>
+            <button className={page === "resumes" ? "active" : ""} aria-current={page === "resumes" ? "page" : undefined} onClick={() => onNavigate("resumes")}>Resumes</button>
+          </nav>
+          <div className="role-toggle">
+            <label htmlFor="roleSelect" style={{ margin: 0, fontWeight: 400 }}>Preview as</label>
+            <select id="roleSelect" value={role} onChange={(e) => onRoleChange(e.target.value)}>
+              <option value="seeker">Job seeker</option>
+              <option value="recruiter">Recruiter</option>
+            </select>
+          </div>
+        </div>
+      </header>
+      <main className="app-main">{children}</main>
+    </>
+  );
+}
+
+function Profile({ role }) {
+  const [about, setAbout] = useState("Third-year Computer Engineering student passionate about backend systems and developer tools.");
+  const [banner, setBanner] = useState(null);
+  const isRecruiter = role === "recruiter";
+  return (
+    <section>
+      <h1>Profile</h1>
+      <p className="page-sub">Update your public profile information.</p>
+      <div className="banner-demo">
+        <span className="hint" style={{ alignSelf: "center" }}>Preview banner:</span>
+        <button onClick={() => setBanner("ok")}>Show success</button>
+        <button onClick={() => setBanner("err")}>Show error</button>
+      </div>
+      {banner === "ok" && <div className="banner ok">✓ Profile saved successfully.</div>}
+      {banner === "err" && <div className="banner err">⚠ Something went wrong. Please try again.</div>}
+      <div className="card">
+        <h2>Basic information</h2>
+        <label htmlFor="fullName">Full name</label>
+        <input type="text" id="fullName" defaultValue="Alex Chen" />
+        <label htmlFor="email">Email</label>
+        <input type="email" id="email" defaultValue="alex.chen@email.com" />
+        <label htmlFor="headline">{isRecruiter ? "Title" : "Headline"}</label>
+        <input type="text" id="headline" defaultValue="Aspiring Software Developer" />
+        <label htmlFor="about">About</label>
+        <textarea id="about" maxLength={ABOUT_LIMIT} value={about} onChange={(e) => setAbout(e.target.value)} />
+        <div className="hint counter">{about.length}/{ABOUT_LIMIT}</div>
+        {isRecruiter ? (
+          <div>
+            <label htmlFor="company">Company</label>
+            <input type="text" id="company" defaultValue="Northwind Technologies" />
+          </div>
+        ) : (
+          <div>
+            <label htmlFor="skills">Skills <span className="hint" style={{ fontWeight: 400 }}>(comma-separated)</span></label>
+            <input type="text" id="skills" defaultValue="Java, React, SQL, Git" />
+          </div>
+        )}
+        <div className="btn-row">
+          <button className="btn btn-primary">Save changes</button>
+          <button className="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Resumes() {
+  const [tab, setTab] = useState("all");
+  const [dragOver, setDragOver] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const visible = tab === "primary" ? RESUMES.filter((r) => r.primary) : RESUMES;
+  return (
+    <section>
+      <h1>Resumes</h1>
+      <p className="page-sub">Upload and manage your resume files.</p>
+      <div className="card">
+        <h2>Upload a resume</h2>
+        <div className={"dropzone" + (dragOver ? " dragover" : "")} tabIndex={0} role="button"
+          aria-label="Drag and drop a resume file, or click to browse"
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); }}>
+          <div>📄 <strong>Drag & drop</strong> your resume here, or</div>
+          <button className="btn btn-secondary" style={{ marginTop: 10 }}>Browse files</button>
+          <div className="hint" style={{ marginTop: 8 }}>PDF or DOCX, up to 5MB</div>
+        </div>
+        <div className="upload-row">
+          <span>Resume_AlexChen.pdf</span>
+          <div className="progress-track"><div className="progress-fill" /></div>
+          <span className="hint">Uploading…</span>
+        </div>
+        <div className="error-example">⚠ Upload failed — file type not supported.</div>
+      </div>
+      <div className="card">
+        <h2>Your resumes</h2>
+        <div className="tabs" role="tablist">
+          <button role="tab" aria-selected={tab === "all"} className={tab === "all" ? "active" : ""} onClick={() => setTab("all")}>All ({RESUMES.length})</button>
+          <button role="tab" aria-selected={tab === "primary"} className={tab === "primary" ? "active" : ""} onClick={() => setTab("primary")}>Primary</button>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Size</th><th>Uploaded</th><th></th></tr></thead>
+            <tbody>
+              {visible.map((r) => (
+                <tr key={r.id}>
+                  <td><span className="fname">{r.name}</span>{" "}{r.primary && <span className="pill">Primary</span>}</td>
+                  <td>{r.size}</td>
+                  <td>{r.date}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button>Download</button>
+                      {!r.primary && <button>Make primary</button>}
+                      <button className="del" onClick={() => setConfirmOpen(true)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {confirmOpen && (
+        <div className="modal-backdrop" onClick={() => setConfirmOpen(false)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="delTitle" onClick={(e) => e.stopPropagation()}>
+            <h3 id="delTitle">Delete resume?</h3>
+            <p>This action cannot be undone.</p>
+            <div className="btn-row">
+              <button className="btn btn-secondary" onClick={() => setConfirmOpen(false)}>Cancel</button>
+              <button className="btn" style={{ background: "var(--danger)", color: "#fff" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function App() {
+  const [page, setPage] = useState("profile");
+  const [role, setRole] = useState("seeker");
+  return (
+    <AppLayout page={page} onNavigate={setPage} role={role} onRoleChange={setRole}>
+      {page === "profile" ? <Profile role={role} /> : <Resumes />}
+    </AppLayout>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
