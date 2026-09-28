@@ -31,7 +31,7 @@ Target completion date: September 30th
 Priority: Medium
 Current Status: In Progress
 
-US-04 — Resume Management
+US-05 — Resume Management
 Responsible Members: Vincent, Philip
 Target completion date: September 30th
 Priority: Medium
