@@ -90,6 +90,6 @@ Uses plain React with `useState` only (no extra libraries). Data is hard-coded s
 
 ## 6. Artifacts produced
 
-- `careerconnect-ui.html` – single-file HTML version (first iteration)
-- `careerconnect/src/` – React version (App.jsx, AppLayout.jsx, Profile.jsx, Resumes.jsx, styles.css)
-- `AI_USAGE.md` – this document
+- `careerconnect-ui.html` – single-file HTML version (first iteration) (this file was not used)
+- `src/` – React version (App.jsx, AppLayout.jsx, Profile.jsx, Resumes.jsx, styles.css) (this folder was used)
+- `AI.md` – this document
