@@ -53,7 +53,7 @@ git push origin dev
 
 ## Running the Server
 
-Navigate to the server directory:
+Navigate to the `server` directory:
 
 ```bash
 
