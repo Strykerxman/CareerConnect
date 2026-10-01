@@ -1,8 +1,9 @@
 import { useState } from "react";
-
 import Field from "../components/Field";
 import { Link, useNavigate } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 function Login() {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
@@ -22,55 +23,55 @@ function Login() {
       [name]: value,
     }));
   }
-
   async function handleSubmit(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  const newErrors = {};
+    const newErrors = {};
 
-  if (!form.email.trim()) {
-    newErrors.email = "Please enter your email address.";
-  }
+    if (!form.email.trim()) {
+      newErrors.email = "Please enter your email address.";
+    }
 
-  if (!form.password) {
-    newErrors.password = "Please enter your password.";
-  }
+    if (!form.password) {
+      newErrors.password = "Please enter your password.";
+    }
 
-  setErrors(newErrors);
-  setServerError("");
+    setErrors(newErrors);
+    setServerError("");
 
-  if (Object.keys(newErrors).length > 0) {
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setServerError(data.error || "Unable to sign in.");
+    if (Object.keys(newErrors).length > 0) {
       return;
     }
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    try {
+      setSubmitting(true);
 
-    navigate("/profile", { replace: true });
-  } catch {
-    setServerError(
-      "Cannot reach the server. Make sure the backend is running."
-    );
-  } finally {
-    setSubmitting(false);
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setServerError(data.error || "Unable to sign in.");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/profile", { replace: true });
+    } catch {
+      setServerError(
+        "Cannot reach the server. Make sure the backend is running."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
-}
+
   return (
     <main className="auth-page">
       <section className="auth-card">
@@ -86,6 +87,12 @@ function Login() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
+          {serverError && (
+            <div className="banner error" role="alert">
+              {serverError}
+            </div>
+          )}
+
           <Field
             label="Email address"
             name="email"
@@ -105,18 +112,14 @@ function Login() {
             error={errors.password}
             placeholder="Enter your password"
           />
-  {serverError && (
-    <div className="banner error" role="alert">
-      {serverError}
-     </div>
-      )}
+
           <button
-    className="button primary auth-submit"
-      type="submit"
-      disabled={submitting}
-            >
-        {submitting ? "Signing in..." : "Sign in"}
-        </button>
+            className="button primary auth-submit"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Signing in..." : "Sign in"}
+          </button>
         </form>
 
         <p className="auth-footer">
