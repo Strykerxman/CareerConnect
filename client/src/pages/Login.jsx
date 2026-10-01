@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import Field from "../components/Field";
 
+import Field from "../components/Field";
+import { Link, useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 function Login() {
+  const navigate = useNavigate();
+  const [serverError, setServerError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -19,28 +23,54 @@ function Login() {
     }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  async function handleSubmit(event) {
+  event.preventDefault();
 
-    const newErrors = {};
+  const newErrors = {};
 
-    if (!form.email.trim()) {
-      newErrors.email = "Please enter your email address.";
-    }
+  if (!form.email.trim()) {
+    newErrors.email = "Please enter your email address.";
+  }
 
-    if (!form.password) {
-      newErrors.password = "Please enter your password.";
-    }
+  if (!form.password) {
+    newErrors.password = "Please enter your password.";
+  }
 
-    setErrors(newErrors);
+  setErrors(newErrors);
+  setServerError("");
 
-    if (Object.keys(newErrors).length > 0) {
+  if (Object.keys(newErrors).length > 0) {
+    return;
+  }
+
+  try {
+    setSubmitting(true);
+
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setServerError(data.error || "Unable to sign in.");
       return;
     }
 
-    console.log("Login form:", form);
-  }
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
+    navigate("/profile", { replace: true });
+  } catch {
+    setServerError(
+      "Cannot reach the server. Make sure the backend is running."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+}
   return (
     <main className="auth-page">
       <section className="auth-card">
@@ -55,7 +85,7 @@ function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit}>
           <Field
             label="Email address"
             name="email"
@@ -75,10 +105,18 @@ function Login() {
             error={errors.password}
             placeholder="Enter your password"
           />
-
-          <button className="btn btn-primary auth-submit" type="submit">
-            Sign in
-          </button>
+  {serverError && (
+    <div className="banner error" role="alert">
+      {serverError}
+     </div>
+      )}
+          <button
+    className="button primary auth-submit"
+      type="submit"
+      disabled={submitting}
+            >
+        {submitting ? "Signing in..." : "Sign in"}
+        </button>
         </form>
 
         <p className="auth-footer">
