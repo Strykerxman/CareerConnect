@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import Field from "../components/Field";
+import { Link, useNavigate } from "react-router-dom";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 function Login() {
+  const navigate = useNavigate();
+  const [serverError, setServerError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -18,8 +23,7 @@ function Login() {
       [name]: value,
     }));
   }
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const newErrors = {};
@@ -33,12 +37,39 @@ function Login() {
     }
 
     setErrors(newErrors);
+    setServerError("");
 
     if (Object.keys(newErrors).length > 0) {
       return;
     }
 
-    console.log("Login form:", form);
+    try {
+      setSubmitting(true);
+
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setServerError(data.error || "Unable to sign in.");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/profile", { replace: true });
+    } catch {
+      setServerError(
+        "Cannot reach the server. Make sure the backend is running."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -55,7 +86,13 @@ function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          {serverError && (
+            <div className="banner error" role="alert">
+              {serverError}
+            </div>
+          )}
+
           <Field
             label="Email address"
             name="email"
@@ -76,8 +113,12 @@ function Login() {
             placeholder="Enter your password"
           />
 
-          <button className="btn btn-primary auth-submit" type="submit">
-            Sign in
+          <button
+            className="button primary auth-submit"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
