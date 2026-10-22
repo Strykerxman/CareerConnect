@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Field from "../components/Field";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -11,6 +14,8 @@ function Register() {
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -21,7 +26,7 @@ function Register() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const newErrors = {};
@@ -39,12 +44,50 @@ function Register() {
     }
 
     setErrors(newErrors);
+    setServerError("");
 
     if (Object.keys(newErrors).length > 0) {
       return;
     }
 
-    console.log("Register form:", form);
+    try {
+      setSubmitting(true);
+
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.name,
+          email: form.email,
+          password: form.password,
+          role: form.role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors) {
+          setErrors({
+            ...data.errors,
+            name: data.errors.fullName,
+          });
+        } else {
+          setServerError(data.error || "Unable to create your account.");
+        }
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/profile", { replace: true });
+    } catch {
+      setServerError(
+        "Cannot reach the server. Make sure the backend is running."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -64,6 +107,12 @@ function Register() {
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
+            {serverError && (
+              <div className="banner error" role="alert">
+                {serverError}
+              </div>
+            )}
+
             <Field
               label="Full name"
               name="name"
@@ -132,8 +181,9 @@ function Register() {
             <button
               className="button primary auth-submit"
               type="submit"
+              disabled={submitting}
             >
-              Create account
+              {submitting ? "Creating account..." : "Create account"}
             </button>
           </form>
 

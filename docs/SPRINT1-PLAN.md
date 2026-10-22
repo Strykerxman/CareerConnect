@@ -1,38 +1,11 @@
-For each planned item, include:
-•	Issue Number
-•	Issue Title
-•	Issue Type (User Story or Task)
-•	Responsible Member
-•	Target Completion Date
-•	Priority (High, Medium, Low)
-•	Current Status (Not Started, In Progress, Completed)
+# Appendix A Sprint 1 Work Plan
 
-US-01 — User Registration 
-Responsible Member: Daryl
-Target completion date: September 29th
-Priority: High
-Current Status: In Progress
-
-US-02 — User Login
-Responsible Member: Daryl
-Target completion date: September 29th
-Priority: High
-Current Status: In Progress
-
-US-03 — Profile Management
-Responsible Members: Vincent, Philip
-Target completion date: September 29th
-Priority: High
-Current Status: In Progress
-
-US-04 — Resume Upload
-Responsible Members: Vincent, Philip
-Target completion date: September 30th
-Priority: Medium
-Current Status: In Progress
-
-US-05 — Resume Management
-Responsible Members: Vincent, Philip
-Target completion date: September 30th
-Priority: Medium
-Current Status: In Progress
+| Issue Number | Issue Title | Issue Type | Responsible Member | Target Completion Date | Priority | Current Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| #5 | US-01 User Registration | User Story | Daryl | September 29, 2026 | High | In Progress |
+| #22 | Task 1.4 Connect Registration Form to Authentication API | Task | Benjamin | October 1, 2026 | High | Completed |
+| #6 | US-02 User Login | User Story | Daryl | September 29, 2026 | High | In Progress |
+| #23 | Task 2.3 Connect Login Form to Authentication API | Task | Benjamin | October 1, 2026 | High | Completed |
+| #7 | US-03 Profile Management | User Story | Vincent and Philip | September 29, 2026 | High | In Progress |
+| #8 | US-04 Resume Upload | User Story | Vincent and Philip | September 30, 2026 | Medium | In Progress |
+| #9 | US-05 Resume Management | User Story | Vincent and Philip | September 30, 2026 | Medium | In Progress |
