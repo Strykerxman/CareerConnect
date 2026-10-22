@@ -120,4 +120,10 @@ Make sure the backend server is also running on:
 http://localhost:4000
 ```
 
+The Jobs page loads public postings from `http://localhost:4000/api/jobs`.
+To use a different backend for this page, set `VITE_API_URL` to its origin in
+`client/.env.local` (for example, `VITE_API_URL=http://localhost:4001`) and restart
+Vite. Set the server's `CLIENT_ORIGIN` to the client URL if it differs from
+`http://localhost:5173`.
+
 For the complete application to work, both the client and server should be running at the same time.
