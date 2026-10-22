@@ -11,6 +11,7 @@ function createApp() {
   app.use('/api/auth', require('./routes/auth'));
   app.use('/api/profile', require('./routes/profile'));
   app.use('/api/resume', require('./routes/resume'));
+  app.use('/api/jobs', require('./routes/jobs'));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
   // eslint-disable-next-line no-unused-vars
