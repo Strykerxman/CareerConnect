@@ -81,8 +81,24 @@ Example response:
 }
 ```
 
-Job creation/editing, a dedicated details endpoint, keyword search, and filters
-are separate tasks. To validate this task, run `npm test` in `server/`;
+### Keyword search
+
+`GET /api/jobs?q=developer` searches the title, company, and description of open
+postings. Matching uses a literal, case-insensitive substring after trimming
+leading and trailing whitespace. `%`, `_`, and quotes are treated as ordinary
+characters. Search terms are not inserted into SQL.
+
+Missing, empty, or whitespace-only `q` returns all open postings. No matches
+returns HTTP 200 with `{ "jobs": [] }`. Search preserves the public response
+fields and newest-first ordering. Repeated `q` parameters return HTTP 400 with
+`{ "error": "Search keyword must be a single string." }`.
+
+Search currently filters the open-posting list in application code using
+JavaScript lowercase matching, including accented case pairs. Pagination and
+database search indexing can be added if the list grows.
+
+Job creation/editing, a dedicated details endpoint, and location/category filters
+are separate tasks. To validate the backend, run `npm test` in `server/`;
 `server/tests/jobs.test.js` inserts fixtures into an isolated in-memory database
 and exercises the HTTP endpoint. A fresh development database returns an empty
 list until postings are added by a future posting-management feature or manually.
