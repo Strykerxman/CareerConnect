@@ -80,3 +80,101 @@ describe('US-06 / Task 6.1 — browse available jobs', () => {
     expect(res.body.jobs.map(job => job.id)).toEqual([sameTime, newest, oldest]);
   });
 });
+
+describe('US-07 / Task 7.4 — job keyword search', () => {
+  test.each(['title', 'company', 'description'])('matches a substring in %s independently', async field => {
+    const id = addJob({ [field]: 'A needle in this field' });
+    addJob();
+
+    const res = await request(app).get('/api/jobs').query({ q: 'needle' });
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([id]);
+  });
+
+  test.each(['developer', 'DEVELOPER', '  DeVeLoPeR\t'])('ignores case and surrounding whitespace in %j', async q => {
+    const id = addJob();
+    addJob({ title: 'Product Designer' });
+
+    const res = await request(app).get('/api/jobs').query({ q });
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([id]);
+  });
+
+  test.each(['', ' \t\n '])('returns the unfiltered open list for blank query %j', async q => {
+    addJob();
+    addJob({ title: 'Product Designer' });
+    addJob({ status: 'closed' });
+
+    const unfiltered = await request(app).get('/api/jobs');
+    const res = await request(app).get('/api/jobs').query({ q });
+    expect(unfiltered.status).toBe(200);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(unfiltered.body);
+    expect(res.body.jobs).toHaveLength(2);
+  });
+
+  test('returns an empty list with 200 when no postings match', async () => {
+    addJob();
+    const res = await request(app).get('/api/jobs').query({ q: 'zzzz' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ jobs: [] });
+  });
+
+  test('does not search location, category, or requirements', async () => {
+    addJob({ location: 'needle', category: 'needle', requirements: 'needle' });
+    const res = await request(app).get('/api/jobs').query({ q: 'needle' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ jobs: [] });
+  });
+
+  test('excludes matching closed postings', async () => {
+    addJob({ status: 'closed' });
+    const id = addJob();
+    const res = await request(app).get('/api/jobs').query({ q: 'developer' });
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([id]);
+  });
+
+  test('preserves public response fields and newest-first ordering with timestamp ties', async () => {
+    const oldest = addJob({ created_at: '2026-10-20 12:00:00' });
+    const newest = addJob();
+    const sameTime = addJob();
+    const nonMatch = addJob({ title: 'Product Designer' });
+
+    const unfiltered = await request(app).get('/api/jobs');
+    const res = await request(app).get('/api/jobs').query({ q: 'developer' });
+    expect(unfiltered.status).toBe(200);
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([sameTime, newest, oldest]);
+    expect(res.body).toEqual({ jobs: unfiltered.body.jobs.filter(job => job.id !== nonMatch) });
+    for (const job of res.body.jobs) {
+      expect(Object.keys(job).sort()).toEqual([
+        'id', 'title', 'company', 'location', 'type', 'category',
+        'description', 'requirements', 'created_at',
+      ].sort());
+    }
+  });
+
+  test('matches accented case pairs', async () => {
+    const id = addJob({ title: 'Développeur logiciel' });
+    addJob();
+    const res = await request(app).get('/api/jobs').query({ q: 'DÉVELOPPEUR' });
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([id]);
+  });
+
+  test.each(['%', '_', "' OR 1=1 --"])('treats %j as literal search text', async q => {
+    const id = addJob({ title: `Position containing ${q}` });
+    addJob();
+    const res = await request(app).get('/api/jobs').query({ q });
+    expect(res.status).toBe(200);
+    expect(res.body.jobs.map(job => job.id)).toEqual([id]);
+  });
+
+  test('rejects repeated q parameters with a clear 400 response', async () => {
+    addJob();
+    const res = await request(app).get('/api/jobs?q=developer&q=designer');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Search keyword must be a single string.' });
+  });
+});
