@@ -715,6 +715,29 @@ a {
 
 
 /* =========================
+   JOB LIST
+   ========================= */
+
+.job-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.job-summary {
+  overflow-wrap: anywhere;
+}
+
+.job-summary p {
+  margin: 8px 0 0;
+}
+
+.job-meta {
+  color: var(--muted);
+}
+
+
+/* =========================
    RESPONSIVE
    ========================= */
 

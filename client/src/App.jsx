@@ -4,6 +4,7 @@ import Profile from './pages/Profile';
 import Resumes from './pages/Resumes';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import Jobs from './pages/Jobs';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route index element={<Navigate to="/register" replace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/resumes" element={<Resumes />} />
+        <Route path="/jobs" element={<Jobs />} />
       </Route>
     </Routes>
   );
