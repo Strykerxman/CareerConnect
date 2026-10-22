@@ -7,6 +7,7 @@ function AppLayout() {
         <div className="topbar-content">
           <NavLink to="/profile" className="brand">CareerConnect</NavLink>
           <nav className="navigation" aria-label="Main navigation">
+            <NavLink to="/jobs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Jobs</NavLink>
             <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Profile</NavLink>
             <NavLink to="/resumes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Resumes</NavLink>
           </nav>
