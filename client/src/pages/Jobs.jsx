@@ -1,3 +1,5 @@
+import JobCard from '../components/JobCard';
+
 // Task 6.2: page layout. Live job loading is added by Task 6.5 (#35).
 function Jobs({ jobs = [] }) {
   return (
@@ -17,15 +19,7 @@ function Jobs({ jobs = [] }) {
           <ul className="job-list">
             {jobs.map(job => (
               <li key={job.id}>
-                <article className="card job-summary">
-                  <h2>{job.title}</h2>
-                  <p>{job.company}</p>
-                  {(job.location || job.type) && (
-                    <p className="job-meta">
-                      {[job.location, job.type].filter(Boolean).join(' · ')}
-                    </p>
-                  )}
-                </article>
+                <JobCard job={job} />
               </li>
             ))}
           </ul>
