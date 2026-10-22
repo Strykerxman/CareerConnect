@@ -735,6 +735,38 @@ a {
 .job-meta {
   color: var(--muted);
 }
+.job-search {
+  margin-bottom: 24px;
+}
+
+.job-search label {
+  display: block;
+  margin-bottom: 7px;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.job-search input {
+  width: 100%;
+  padding: 11px 12px;
+
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  outline: none;
+
+  background: var(--surface);
+  color: var(--text);
+}
+
+.job-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(36, 87, 214, 0.14);
+}
+
+.empty-state .button {
+  margin-top: 12px;
+}
 /* =========================
    JOB DETAILS
    ========================= */
