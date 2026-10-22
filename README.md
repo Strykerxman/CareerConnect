@@ -1,129 +1,104 @@
 # CareerConnect
-A web-based platform designed to help job seekers manage their job search activities.
 
-# Git & Workflow Guide
+[![CI](https://github.com/Strykerxman/CareerConnect/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/Strykerxman/CareerConnect/actions/workflows/ci.yml)
 
-To keep our repository organized and avoid breaking code, we follow a specific branch strategy. Please use this guide whenever you are working on features.
+CareerConnect is a React and Express application that helps job seekers manage profiles, resumes, job searches, and applications.
 
-## Important Rules
+## Project planning
 
-1. **Please do not try pushing directly to `main`.** Your local code must enter the `dev` branch first.
-2. **`dev` is our default branch.** Please only push to `dev`. `main` is the **fully functional, holy-grail** codebase.
+The [CareerConnect GitHub Project](https://github.com/users/Strykerxman/projects/1) is the source of truth for user stories, tasks, ownership, and current status. Issues should contain the acceptance criteria; the board should show the workflow state. Sprint reports and plans in this repository are historical records rather than live trackers.
 
-Now, to push `dev` code to `main`, create a *Pull Request* (PR). Someone else than yourself will review it and decide what to do with it. PRs may become mandatory for `dev` in the future, but for simplicity and learning, only the `main` branch has these rules.
+When starting work:
 
-## How I'd start coding
+1. Assign yourself an issue and move it to **In Progress**.
+2. Branch from the latest `dev` branch.
+3. Open a pull request back into `dev`, link the issue, and move it to **Need to be reviewed**.
+4. Merge only after review and all CI checks pass.
+5. Close the issue and move it to **Done** once its acceptance criteria have been verified.
 
-### 1. Grab a Task
-Go to the Github Project Board, the "Projects" tab on the top bar. Assign an *Issue* in the **Backlog** column to yourself and drag it to **In Progress**.
+## Branch workflow
 
-### 2. Update Local Dev Code
-Before you write anything, make sure you pull the branch to ensure it's up-to-date on your machine.
+- `dev` is the default integration branch.
+- Feature and fix branches are created from `dev` and merged into `dev` through pull requests.
+- `main` is the stable release branch. Promote `dev` to `main` with a reviewed pull request.
+- Do not push feature work directly to `dev` or `main`.
+
+Example:
+
 ```bash
-git checkout dev
+git switch dev
 git pull origin dev
+git switch -c feature/issue-42-job-filters
+
+# Make and commit the change, then publish the branch.
+git push -u origin feature/issue-42-job-filters
 ```
 
-### 3. Save Your Work (Commit)
-After making changes, add and commit your updates:
-```bash
-git add .
-git commit -m "Briefly explain what you changed or built"
-```
+Branch protection must be configured in GitHub in addition to this team policy. See [CI and delivery](docs/CI-CD.md#required-github-settings).
 
-### 4. Push Your Code
-Once you've done that, you can push the changes to the `dev` branch.
-```bash
-git push origin dev
-```
+## Local development
 
-## It's not working
+### Requirements
 
-If Git blocks you from pushing, then someone may have pushed right before you.
-So run:  
-```bash
-git pull origin dev
-```  
-Resolve the conflicting lines in your IDE (I use VSCode), finalize your version and then finish the push with:  
-```bash
-git add .
-git commit -m "Fix merge conflict"
-git push origin dev
-```
+- Node.js 24
+- npm
 
-## Running the Server
-
-Navigate to the `server` directory:
+### Server
 
 ```bash
-
 cd server
-
-```
-
-Install the project dependencies:
-
-```bash
-
 npm ci
-
-```
-
-Install Multer for resume file uploads:
-
-```bash
-
-npm install multer
-
-```
-
-Run the development server:
-
-```bash
-
 npm run dev
-
 ```
-## Running the Client
 
-The CareerConnect frontend is built using React and Vite.
+For local configuration, copy `server/.env.example` to `server/.env` and replace `JWT_SECRET` with a private value. The API runs at `http://localhost:4000` by default. Multer and the other server dependencies are already installed by `npm ci`; do not install them separately.
 
-Navigate to the client directory:
+### Client
+
+In another terminal:
 
 ```bash
 cd client
-```
-
-Install the project dependencies:
-
-```bash
 npm ci
-```
-
-Run the development client:
-
-```bash
 npm run dev
 ```
 
-The frontend should run on:
+Vite serves the client at `http://localhost:5173` by default. Run the client and server together for the complete application.
 
-```text
-http://localhost:5174
+## Local quality checks
+
+Run the same checks used by CI before opening a pull request:
+
+```bash
+cd server
+npm ci
+npm test -- --ci
 ```
 
-Open this address in your browser to access CareerConnect.
-
-Make sure the backend server is also running on:
-
-```text
-http://localhost:4000
+```bash
+cd client
+npm ci
+npm test -- --run
+npm run build
 ```
 
-The Jobs page loads public postings from `http://localhost:4000/api/jobs`.
-To use a different backend for this page, set `VITE_API_URL` to its origin in
-`client/.env.local` (for example, `VITE_API_URL=http://localhost:4001`) and restart
-Vite. Set the server's `CLIENT_ORIGIN` to the client URL if it differs from
-`http://localhost:5173`.
+## CI/CD
 
-For the complete application to work, both the client and server should be running at the same time.
+GitHub Actions CI is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). On pull requests and pushes to `dev` or `main`, it:
+
+- installs locked dependencies with `npm ci`;
+- runs the backend Jest suite;
+- runs the frontend Vitest suite; and
+- verifies the frontend production build.
+
+The workflow can also be started manually from the Actions tab. Continuous deployment is **not configured** because the project does not yet specify a hosting provider, production environment, or deployment credentials. See [docs/CI-CD.md](docs/CI-CD.md) for the pipeline, required repository settings, and the steps needed before adding deployment.
+
+## Repository layout
+
+```text
+.github/workflows/   GitHub Actions workflows
+client/              React and Vite frontend
+docs/                Technical and process documentation
+meeting-minutes/     Historical team meeting records
+server/              Express, SQLite, and Jest backend
+```
