@@ -12,6 +12,20 @@ erDiagram
     TEXT role "job_seeker | recruiter"
     TEXT created_at
   }
+  USERS ||--o{ JOBS : posts
+  JOBS {
+    INTEGER id PK
+    INTEGER recruiter_id FK "deleted with user"
+    TEXT title
+    TEXT company
+    TEXT location
+    TEXT type
+    TEXT category
+    TEXT description
+    TEXT requirements
+    TEXT status "open | closed"
+    TEXT created_at
+  }
   PROFILES {
     INTEGER user_id PK, FK "deleted with user"
     TEXT full_name
@@ -32,3 +46,43 @@ Design notes:
 - `role` is limited by a `CHECK` constraint to the two supported user types.
 - Passwords are stored only as bcrypt hashes.
 - The `resumes` table is added by US-04.
+
+- The `jobs` table supports US-06 / Task 6.1. `recruiter_id` references the posting owner's user ID; future posting-management routes must enforce the recruiter role.
+- Jobs default to `open`; closing a posting keeps its record while removing it from the public listing.
+- `type` and `category` are text fields for the later search/filter tasks. `requirements` is plain text.
+- Existing databases gain the table on startup without deleting users, profiles, or resumes. No sample jobs are inserted automatically.
+
+## Available jobs API
+
+`GET /api/jobs` is public and returns HTTP 200 with `{ "jobs": [...] }`.
+Only open postings appear, ordered by `created_at` descending, then `id` descending
+for consistent ordering when timestamps match. No postings returns `{ "jobs": [] }`.
+Each job has `id`, `title`, `company`, `location`, `type`, `category`, `description`,
+`requirements`, and `created_at` (SQLite UTC timestamp, `YYYY-MM-DD HH:MM:SS`).
+The recruiter owner's ID and internal posting status are not included.
+
+Example response:
+
+```json
+{
+  "jobs": [
+    {
+      "id": 1,
+      "title": "Software Developer",
+      "company": "Example Company",
+      "location": "Montreal",
+      "type": "Full-time",
+      "category": "Engineering",
+      "description": "Build web applications.",
+      "requirements": "Experience with JavaScript.",
+      "created_at": "2026-10-22 12:00:00"
+    }
+  ]
+}
+```
+
+Job creation/editing, a dedicated details endpoint, keyword search, and filters
+are separate tasks. To validate this task, run `npm test` in `server/`;
+`server/tests/jobs.test.js` inserts fixtures into an isolated in-memory database
+and exercises the HTTP endpoint. A fresh development database returns an empty
+list until postings are added by a future posting-management feature or manually.
