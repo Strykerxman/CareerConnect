@@ -32,6 +32,20 @@ CREATE TABLE IF NOT EXISTS resumes (
   file_size     INTEGER NOT NULL,
   uploaded_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS jobs (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  recruiter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  company      TEXT NOT NULL,
+  location     TEXT NOT NULL DEFAULT '',
+  type         TEXT NOT NULL DEFAULT '',
+  category     TEXT NOT NULL DEFAULT '',
+  description  TEXT NOT NULL,
+  requirements TEXT NOT NULL DEFAULT '',
+  status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 
