@@ -4,18 +4,6 @@
 
 CareerConnect is a React and Express application that helps job seekers manage profiles, resumes, job searches, and applications.
 
-## Project planning
-
-The [CareerConnect GitHub Project](https://github.com/users/Strykerxman/projects/1) is the source of truth for user stories, tasks, ownership, and current status. Issues should contain the acceptance criteria; the board should show the workflow state. Sprint reports and plans in this repository are historical records rather than live trackers.
-
-When starting work:
-
-1. Assign yourself an issue and move it to **In Progress**.
-2. Branch from the latest `dev` branch.
-3. Open a pull request back into `dev`, link the issue, and move it to **Need to be reviewed**.
-4. Merge only after review and all CI checks pass.
-5. Close the issue and move it to **Done** once its acceptance criteria have been verified.
-
 ## Branch workflow
 
 - `dev` is the default integration branch.
@@ -91,7 +79,7 @@ GitHub Actions CI is defined in [`.github/workflows/ci.yml`](.github/workflows/c
 - runs the frontend Vitest suite; and
 - verifies the frontend production build.
 
-The workflow can also be started manually from the Actions tab. Continuous deployment is **not configured** because the project does not yet specify a hosting provider, production environment, or deployment credentials. See [docs/CI-CD.md](docs/CI-CD.md) for the pipeline, required repository settings, and the steps needed before adding deployment.
+The workflow can also be started manually from the Actions tab.
 
 ## Repository layout
 
