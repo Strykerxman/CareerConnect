@@ -9,6 +9,8 @@ function Jobs() {
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [search, setSearch] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -63,19 +65,37 @@ function Jobs() {
 
   const searchValue = search.trim().toLowerCase();
 
-  const filteredJobs = jobs.filter(job => {
-    if (!searchValue) return true;
+  const locations = [...new Set(jobs.map(job => job.location).filter(Boolean))].sort();
+  const categories = [...new Set(jobs.map(job => job.category).filter(Boolean))].sort();
 
-    return (
-      job.title.toLowerCase().includes(searchValue) ||
-      job.company.toLowerCase().includes(searchValue) ||
-      (job.location || '').toLowerCase().includes(searchValue) ||
-      (job.type || '').toLowerCase().includes(searchValue)
-    );
+  const filteredJobs = jobs.filter(job => {
+    const matchesSearch =
+      !searchValue ||
+      [
+        job.title,
+        job.company,
+        job.description,
+        job.requirements,
+        job.location,
+        job.type,
+        job.category,
+      ].some(value =>
+        String(value || '').toLowerCase().includes(searchValue)
+      );
+
+    const matchesLocation =
+      !selectedLocation || job.location === selectedLocation;
+
+    const matchesCategory =
+      !selectedCategory || job.category === selectedCategory;
+
+    return matchesSearch && matchesLocation && matchesCategory;
   });
 
   function clearSearch() {
     setSearch('');
+    setSelectedLocation('');
+    setSelectedCategory('');
   }
 
   return (
@@ -85,17 +105,50 @@ function Jobs() {
         <p>Discover available job opportunities.</p>
       </div>
 
-      {!loading && !error && jobs.length > 0 && (
+      {!loading && !error && (
         <div className="job-search">
           <label htmlFor="job-search">Search jobs</label>
-
           <input
             id="job-search"
             type="search"
-            placeholder="Search by title, company, location..."
+            placeholder="Search jobs by keyword..."
             value={search}
             onChange={event => setSearch(event.target.value)}
           />
+
+          <div className="job-filter-grid">
+            <div>
+              <label htmlFor="location-filter">Location</label>
+              <select
+                id="location-filter"
+                value={selectedLocation}
+                onChange={event => setSelectedLocation(event.target.value)}
+              >
+                <option value="">All locations</option>
+                {locations.map(location => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="category-filter">Category</label>
+              <select
+                id="category-filter"
+                value={selectedCategory}
+                onChange={event => setSelectedCategory(event.target.value)}
+              >
+                <option value="">All categories</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       )}
 
