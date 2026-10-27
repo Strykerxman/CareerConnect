@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import ApplyForm from '../components/ApplyForm.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -100,6 +101,7 @@ function JobDetails() {
           <h1>{job.title}</h1>
           <p className="job-details-company">{job.company}</p>
           {metadata && <p className="job-meta">{metadata}</p>}
+          <ApplyForm key={job.id} jobId={job.id} />
         </div>
 
         <div className="job-details-section">
