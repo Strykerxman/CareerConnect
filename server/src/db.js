@@ -46,6 +46,23 @@ CREATE TABLE IF NOT EXISTS jobs (
   status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
   created_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS applications (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  job_id       INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  resume_id    INTEGER REFERENCES resumes(id) ON DELETE SET NULL,
+  status       TEXT NOT NULL DEFAULT 'Applied'
+               CHECK (status IN (
+                 'Applied',
+                 'Under Review',
+                 'Interview',
+                 'Offered',
+                 'Rejected'
+               )),
+  applied_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(job_id, user_id)
+);
 `;
 
 
