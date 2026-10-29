@@ -29,4 +29,39 @@ router.get('/', (req, res) => {
   return res.json({ jobs: results });
 });
 
+// Task 6.7 — Get details for a specific job
+router.get('/:id', (req, res) => {
+  const id = req.params.id;
+  const jobId = Number(id);
+
+  // Check whether the job ID is valid
+  if (
+    !/^[1-9]\d*$/.test(id) ||
+    !Number.isSafeInteger(jobId)
+  ) {
+    return res.status(400).json({
+      error: 'Invalid job ID.'
+    });
+  }
+
+  // Find an open job with the requested ID
+  const job = getDb().prepare(`
+    SELECT id, title, company, location, type,
+           category, description, requirements,
+           created_at
+    FROM jobs
+    WHERE id = ? AND status = 'open'
+  `).get(jobId);
+
+  // Job doesn't exist or isn't available
+  if (!job) {
+    return res.status(404).json({
+      error: 'Job not found.'
+    });
+  }
+
+  // Return the job information
+  return res.status(200).json({ job });
+});
+
 module.exports = router;
