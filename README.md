@@ -22,8 +22,6 @@ git switch -c feature/issue-42-job-filters
 git push -u origin feature/issue-42-job-filters
 ```
 
-Branch protection must be configured in GitHub in addition to this team policy. See [CI and delivery](docs/CI-CD.md#required-github-settings).
-
 ## Local development
 
 ### Requirements
