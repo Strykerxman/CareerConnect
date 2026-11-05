@@ -260,4 +260,31 @@ describe('Task 9.5 - Saved Jobs API', () => {
     expect(savedCount()).toBe(0);
   });
 
+  // TEST 16: Application deadlines are returned for saved jobs
+  
+  test('returns application deadlines for saved jobs', async () => {
+    // Create a job
+    const jobId = createJob();
+
+    // Assign an application deadline
+    getDb().prepare(`
+      UPDATE jobs
+      SET application_deadline = ?
+      WHERE id = ?
+  ` ).run('2026-11-08', jobId);
+
+    // Save the job as a job seeker
+    const save = await saveAs(seeker.token, jobId);
+    expect(save.status).toBe(201);
+
+    // Retrieve the user's saved jobs
+    const res = await listAs(seeker.token);
+
+    // Verify the deadline is included
+    expect(res.status).toBe(200);
+    expect(res.body.savedJobs).toHaveLength(1);
+    expect(res.body.savedJobs[0].application_deadline)
+      .toBe('2026-11-08');
+  }); 
+
 });

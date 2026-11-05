@@ -11,13 +11,13 @@ router.get('/', (req, res) => {
   }
   const keyword = (q || '').trim().toLowerCase();
 
-  const jobs = getDb().prepare(`
-    SELECT id, title, company, location, type, category, description,
-           requirements, created_at
-    FROM jobs
-    WHERE status = 'open'
-    ORDER BY created_at DESC, id DESC
-  `).all();
+ const jobs = getDb().prepare(`
+  SELECT id, title, company, location, type, category, description,
+         requirements, application_deadline, created_at
+  FROM jobs
+  WHERE status = 'open'
+  ORDER BY created_at DESC, id DESC
+`).all();
 
   // Literal substring matching also handles accented case pairs with JS lowercase.
   // Filtering preserves the database's open-only, newest-first ordering.
@@ -45,13 +45,13 @@ router.get('/:id', (req, res) => {
   }
 
   // Find an open job with the requested ID
-  const job = getDb().prepare(`
-    SELECT id, title, company, location, type,
-           category, description, requirements,
-           created_at
-    FROM jobs
-    WHERE id = ? AND status = 'open'
-  `).get(jobId);
+ const job = getDb().prepare(`
+  SELECT id, title, company, location, type,
+         category, description, requirements,
+         application_deadline, created_at
+  FROM jobs
+  WHERE id = ? AND status = 'open'
+`).get(jobId);
 
   // Job doesn't exist or isn't available
   if (!job) {
