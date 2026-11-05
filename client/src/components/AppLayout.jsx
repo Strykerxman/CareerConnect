@@ -28,6 +28,10 @@ function AppLayout() {
             <NavLink to="/applications" className={navClass}>
               My Applications
             </NavLink>
+
+            <NavLink to="/saved-jobs" className={navClass}>
+              Saved Jobs
+            </NavLink>
           </nav>
         </div>
       </header>
