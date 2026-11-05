@@ -32,6 +32,10 @@ function AppLayout() {
             <NavLink to="/saved-jobs" className={navClass}>
               Saved Jobs
             </NavLink>
+
+            <NavLink to="/reminders" className={navClass}>
+              Reminders
+            </NavLink>
           </nav>
         </div>
       </header>
