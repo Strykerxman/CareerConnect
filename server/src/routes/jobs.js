@@ -12,14 +12,21 @@ router.get('/', (req, res) => {
 
   const filters = { q, location, type, category };
 
-  // Reject invalid query parameter types.
-  for (const value of Object.values(filters)) {
-    if (value !== undefined && typeof value !== 'string') {
-      return res.status(400).json({
-        error: 'Search filters must be single strings.',
-      });
-    }
+ // Validate keyword search separately (US-07).
+if (q !== undefined && typeof q !== 'string') {
+  return res.status(400).json({
+    error: 'Search keyword must be a single string.',
+  });
+}
+
+// Validate dropdown filters (US-08).
+for (const value of [location, type, category]) {
+  if (value !== undefined && typeof value !== 'string') {
+    return res.status(400).json({
+      error: 'Search filters must be single strings.',
+    });
   }
+}
 
   const keyword = (q || '').trim().toLowerCase();
   const selectedLocation = (location || '').trim().toLowerCase();
@@ -75,5 +82,52 @@ router.get('/', (req, res) => {
 
   return res.json({ jobs: filteredJobs });
 });
+
+/**
+ * GET /api/jobs/:id
+ * Retrieve the details of a single open job.
+ */
+router.get('/:id', (req, res) => {
+  const rawId = req.params.id;
+
+  if (!/^[1-9]\d*$/.test(rawId)) {
+    return res.status(400).json({
+      error: 'Invalid job ID.',
+    });
+  }
+
+  const id = Number(rawId);
+
+  if (!Number.isSafeInteger(id)) {
+    return res.status(400).json({
+      error: 'Invalid job ID.',
+    });
+  }
+
+  const job = getDb().prepare(`
+    SELECT
+      id,
+      title,
+      company,
+      location,
+      type,
+      category,
+      description,
+      requirements,
+      status,
+      created_at
+    FROM jobs
+    WHERE id = ? AND status = 'open'
+  `).get(id);
+
+  if (!job) {
+    return res.status(404).json({
+      error: 'Job not found.',
+    });
+  }
+
+  return res.json({ job });
+});
+
 
 module.exports = router;
