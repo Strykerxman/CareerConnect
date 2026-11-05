@@ -751,8 +751,19 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 8px;
   text-decoration: none;
+}
+
+/* View Details and Save sit side by side, wrapping on narrow screens. */
+.job-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.job-details-header .job-actions {
+  margin: 16px 0;
 }
 .job-search {
   margin-bottom: 24px;

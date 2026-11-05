@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import ApplyForm from '../components/ApplyForm.jsx';
+import SaveJobButton from '../components/SaveJobButton.jsx';
+import useSavedJobs from '../useSavedJobs';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -16,6 +18,7 @@ function JobDetails() {
   const [job, setJob] = useState(initialJob);
   const [loading, setLoading] = useState(!initialJob);
   const [error, setError] = useState('');
+  const saved = useSavedJobs();
 
   useEffect(() => {
     if (job && String(job.id) === id) return;
@@ -101,6 +104,20 @@ function JobDetails() {
           <h1>{job.title}</h1>
           <p className="job-details-company">{job.company}</p>
           {metadata && <p className="job-meta">{metadata}</p>}
+
+          {saved.canSave && (
+            <div className="job-actions">
+              <SaveJobButton
+                saved={saved.isSaved(job.id)}
+                pending={saved.loading || saved.isPending(job.id)}
+                onToggle={() => saved.toggleSave(job)}
+              />
+            </div>
+          )}
+          {saved.error && (
+            <div className="banner error" role="alert">{saved.error}</div>
+          )}
+
           <ApplyForm key={job.id} jobId={job.id} />
         </div>
 
