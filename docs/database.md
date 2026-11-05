@@ -38,6 +38,13 @@ erDiagram
     TEXT company_name "recruiters"
     TEXT updated_at
   }
+  USERS ||--o{ SAVED_JOBS : saves
+  JOBS ||--o{ SAVED_JOBS : "saved as"
+  SAVED_JOBS {
+    INTEGER user_id PK, FK "deleted with user"
+    INTEGER job_id PK, FK "deleted with job"
+    TEXT saved_at
+  }
 ```
 
 Design notes:
@@ -51,6 +58,9 @@ Design notes:
 - Jobs default to `open`; closing a posting keeps its record while removing it from the public listing.
 - `type` and `category` are text fields for the later search/filter tasks. `requirements` is plain text.
 - Existing databases gain the table on startup without deleting users, profiles, or resumes. No sample jobs are inserted automatically.
+
+- The `saved_jobs` table supports US-09 / Task 9.1. Its primary key is (`user_id`, `job_id`), so a job can only be saved once per user.
+- Saved rows are deleted automatically (`ON DELETE CASCADE`) when the user or the job is deleted. Existing databases gain the table on startup.
 
 ## Available jobs API
 
@@ -102,3 +112,18 @@ are separate tasks. To validate the backend, run `npm test` in `server/`;
 `server/tests/jobs.test.js` inserts fixtures into an isolated in-memory database
 and exercises the HTTP endpoint. A fresh development database returns an empty
 list until postings are added by a future posting-management feature or manually.
+
+## Saved jobs API
+
+US-09 / Task 9.2. All routes require a `Bearer` token (HTTP 401 without one) and
+are limited to job seekers (recruiters get HTTP 403).
+
+| Method | Route | Result |
+| --- | --- | --- |
+| `POST` | `/api/saved-jobs/:jobId` | 201 when saved, 200 if it was already saved (no duplicate row) |
+| `DELETE` | `/api/saved-jobs/:jobId` | 204 when removed, 404 if it was not saved |
+| `GET` | `/api/saved-jobs` | 200 with `{ "savedJobs": [...] }`, newest save first |
+
+Invalid job IDs return HTTP 400. Only open jobs can be saved (HTTP 404 otherwise),
+and closed jobs are left out of the list. Each saved job has the same fields as
+`GET /api/jobs` plus `savedAt`. Tests are in `server/tests/saved-jobs.test.js`.

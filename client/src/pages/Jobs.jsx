@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import JobCard from '../components/JobCard';
+import useSavedJobs from '../useSavedJobs';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -13,6 +14,7 @@ function Jobs() {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const saved = useSavedJobs();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -242,6 +244,9 @@ function Jobs() {
           </button>
         </div>
       )}
+      {saved.error && (
+        <div className="banner error" role="alert">{saved.error}</div>
+      )}
 
       <section
         aria-label="Available opportunities"
@@ -283,7 +288,12 @@ function Jobs() {
           <ul className="job-list">
             {filteredJobs.map(job => (
               <li key={job.id}>
-                <JobCard job={job} />
+                <JobCard
+                  job={job}
+                  saved={saved.isSaved(job.id)}
+                  savePending={saved.isPending(job.id)}
+                  onToggleSave={saved.canSave ? saved.toggleSave : undefined}
+                />
               </li>
             ))}
           </ul>

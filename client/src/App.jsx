@@ -8,6 +8,7 @@ import Jobs from './pages/Jobs';
 import JobDetails from './pages/JobDetails';
 import MyApplications from './pages/MyApplications';
 import ApplicationStats from "./pages/ApplicationStats";
+import SavedJobs from './pages/SavedJobs';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
 
       <Route element={<AppLayout />}>
         <Route path="/applications" element={<MyApplications />} />
+        <Route path="/saved-jobs" element={<SavedJobs />} />
         <Route index element={<Navigate to="/register" replace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/resumes" element={<Resumes />} />

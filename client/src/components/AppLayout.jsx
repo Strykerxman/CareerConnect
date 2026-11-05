@@ -31,6 +31,9 @@ function AppLayout() {
             <NavLink to="/application-stats" className={navClass}>
               Statistics
             </NavLink>
+            <NavLink to="/saved-jobs" className={navClass}>
+              Saved Jobs
+            </NavLink>
           </nav>
         </div>
       </header>
