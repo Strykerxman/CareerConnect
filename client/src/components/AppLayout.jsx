@@ -28,6 +28,9 @@ function AppLayout() {
             <NavLink to="/applications" className={navClass}>
               My Applications
             </NavLink>
+            <NavLink to="/application-stats" className={navClass}>
+              Statistics
+            </NavLink>
           </nav>
         </div>
       </header>

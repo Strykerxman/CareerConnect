@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Jobs from './pages/Jobs';
 import JobDetails from './pages/JobDetails';
 import MyApplications from './pages/MyApplications';
+import ApplicationStats from "./pages/ApplicationStats";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/resumes" element={<Resumes />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
+        <Route path="/application-stats" element={<ApplicationStats />} />
       </Route>
     </Routes>
   );
