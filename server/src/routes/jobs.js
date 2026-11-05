@@ -1,67 +1,79 @@
+
 const express = require('express');
 const { getDb } = require('../db');
 
 const router = express.Router();
 
-// US-06 / Task 6.1 — Public listing of available job postings.
+// GET /api/jobs
+// Retrieve open jobs with optional keyword, location,
+// employment type and category filters.
 router.get('/', (req, res) => {
-  const { q } = req.query;
-  if (q !== undefined && typeof q !== 'string') {
-    return res.status(400).json({ error: 'Search keyword must be a single string.' });
+  const { q, location, type, category } = req.query;
+
+  const filters = { q, location, type, category };
+
+  // Reject invalid query parameter types.
+  for (const value of Object.values(filters)) {
+    if (value !== undefined && typeof value !== 'string') {
+      return res.status(400).json({
+        error: 'Search filters must be single strings.',
+      });
+    }
   }
+
   const keyword = (q || '').trim().toLowerCase();
+  const selectedLocation = (location || '').trim().toLowerCase();
+  const selectedType = (type || '').trim().toLowerCase();
+  const selectedCategory = (category || '').trim().toLowerCase();
 
   const jobs = getDb().prepare(`
-    SELECT id, title, company, location, type, category, description,
-           requirements, created_at
+    SELECT
+      id,
+      title,
+      company,
+      location,
+      type,
+      category,
+      description,
+      requirements,
+      created_at
     FROM jobs
     WHERE status = 'open'
     ORDER BY created_at DESC, id DESC
   `).all();
 
-  // Literal substring matching also handles accented case pairs with JS lowercase.
-  // Filtering preserves the database's open-only, newest-first ordering.
-  const results = keyword
-    ? jobs.filter(job => [job.title, job.company, job.description]
-      .some(value => value.toLowerCase().includes(keyword)))
-    : jobs;
+  const filteredJobs = jobs.filter(job => {
+    const matchesKeyword =
+      !keyword ||
+      [
+        job.title,
+        job.company,
+        job.description,
+      ].some(value =>
+        String(value || '').toLowerCase().includes(keyword)
+      );
 
-  return res.json({ jobs: results });
-});
+    const matchesLocation =
+      !selectedLocation ||
+      job.location.toLowerCase() === selectedLocation;
 
-// Task 6.7 — Get details for a specific job
-router.get('/:id', (req, res) => {
-  const id = req.params.id;
-  const jobId = Number(id);
+    const matchesType =
+      !selectedType ||
+      job.type.toLowerCase() === selectedType;
 
-  // Check whether the job ID is valid
-  if (
-    !/^[1-9]\d*$/.test(id) ||
-    !Number.isSafeInteger(jobId)
-  ) {
-    return res.status(400).json({
-      error: 'Invalid job ID.'
-    });
-  }
+    const matchesCategory =
+      !selectedCategory ||
+      job.category.toLowerCase() === selectedCategory;
 
-  // Find an open job with the requested ID
-  const job = getDb().prepare(`
-    SELECT id, title, company, location, type,
-           category, description, requirements,
-           created_at
-    FROM jobs
-    WHERE id = ? AND status = 'open'
-  `).get(jobId);
+    return (
+      matchesKeyword &&
+      matchesLocation &&
+      matchesType &&
+      matchesCategory
+    );
+  });
 
-  // Job doesn't exist or isn't available
-  if (!job) {
-    return res.status(404).json({
-      error: 'Job not found.'
-    });
-  }
-
-  // Return the job information
-  return res.status(200).json({ job });
+  return res.json({ jobs: filteredJobs });
 });
 
 module.exports = router;

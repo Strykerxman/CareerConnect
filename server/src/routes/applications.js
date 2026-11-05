@@ -119,4 +119,47 @@ router.get('/', (req, res) => {
   return res.json({ applications });
 });
 
+const APPLICATION_STATUSES = [
+  'Applied',
+  'Under Review',
+  'Interview',
+  'Offered',
+  'Rejected',
+];
+
+// GET /api/applications/stats
+router.get('/stats', (req, res) => {
+  if (req.user.role !== 'job_seeker') {
+    return res.status(403).json({
+      error: 'Only job seekers can view application statistics.',
+    });
+  }
+
+  const rows = getDb().prepare(`
+    SELECT status, COUNT(*) AS count
+    FROM applications
+    WHERE user_id = ?
+    GROUP BY status
+  `).all(req.user.id);
+
+  const byStatus = Object.fromEntries(
+    APPLICATION_STATUSES.map(status => [status, 0])
+  );
+
+  for (const row of rows) {
+    if (Object.hasOwn(byStatus, row.status)) {
+      byStatus[row.status] = row.count;
+    }
+  }
+
+  const total = Object.values(byStatus)
+    .reduce((sum, count) => sum + count, 0);
+
+  return res.json({
+    total,
+    byStatus,
+  });
+});
+
+
 module.exports = router;

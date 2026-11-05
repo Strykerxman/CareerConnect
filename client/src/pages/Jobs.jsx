@@ -8,8 +8,10 @@ function Jobs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedType, setSelectedType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
@@ -25,7 +27,9 @@ function Jobs() {
           signal: controller.signal,
         });
 
-        if (!response.ok) throw new Error('Jobs request failed.');
+        if (!response.ok) {
+          throw new Error('Jobs request failed.');
+        }
 
         const data = await response.json();
 
@@ -63,10 +67,21 @@ function Jobs() {
     return () => controller.abort();
   }, [attempt]);
 
-  const searchValue = search.trim().toLowerCase();
+  // Generate dropdown options from available jobs.
+  const locations = [
+    ...new Set(jobs.map(job => job.location).filter(Boolean)),
+  ].sort();
 
-  const locations = [...new Set(jobs.map(job => job.location).filter(Boolean))].sort();
-  const categories = [...new Set(jobs.map(job => job.category).filter(Boolean))].sort();
+  const types = [
+    ...new Set(jobs.map(job => job.type).filter(Boolean)),
+  ].sort();
+
+  const categories = [
+    ...new Set(jobs.map(job => job.category).filter(Boolean)),
+  ].sort();
+
+  // Apply keyword and dropdown filters together.
+  const searchValue = search.trim().toLowerCase();
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch =
@@ -86,15 +101,31 @@ function Jobs() {
     const matchesLocation =
       !selectedLocation || job.location === selectedLocation;
 
+    const matchesType =
+      !selectedType || job.type === selectedType;
+
     const matchesCategory =
       !selectedCategory || job.category === selectedCategory;
 
-    return matchesSearch && matchesLocation && matchesCategory;
+    return (
+      matchesSearch &&
+      matchesLocation &&
+      matchesType &&
+      matchesCategory
+    );
   });
 
-  function clearSearch() {
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    selectedLocation !== '' ||
+    selectedType !== '' ||
+    selectedCategory !== '';
+
+  // Reset all four filters at once.
+  function resetFilters() {
     setSearch('');
     setSelectedLocation('');
+    setSelectedType('');
     setSelectedCategory('');
   }
 
@@ -108,6 +139,7 @@ function Jobs() {
       {!loading && !error && (
         <div className="job-search">
           <label htmlFor="job-search">Search jobs</label>
+
           <input
             id="job-search"
             type="search"
@@ -134,6 +166,22 @@ function Jobs() {
             </div>
 
             <div>
+              <label htmlFor="type-filter">Job Type</label>
+              <select
+                id="type-filter"
+                value={selectedType}
+                onChange={event => setSelectedType(event.target.value)}
+              >
+                <option value="">All job types</option>
+                {types.map(type => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="category-filter">Category</label>
               <select
                 id="category-filter"
@@ -149,6 +197,49 @@ function Jobs() {
               </select>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Active filters and reset button */}
+      {!loading && !error && hasActiveFilters && (
+        <div className="active-filters">
+          <div className="active-filters-list">
+            <span className="active-filters-label">
+              Active filters:
+            </span>
+
+            {search.trim() && (
+              <span className="filter-chip">
+                Search: {search.trim()}
+              </span>
+            )}
+
+            {selectedLocation && (
+              <span className="filter-chip">
+                Location: {selectedLocation}
+              </span>
+            )}
+
+            {selectedType && (
+              <span className="filter-chip">
+                Type: {selectedType}
+              </span>
+            )}
+
+            {selectedCategory && (
+              <span className="filter-chip">
+                Category: {selectedCategory}
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="button secondary"
+            onClick={resetFilters}
+          >
+            Reset Filters
+          </button>
         </div>
       )}
 
@@ -178,14 +269,14 @@ function Jobs() {
         ) : filteredJobs.length === 0 ? (
           <div className="card empty-state">
             <h2>No jobs found</h2>
-            <p>No jobs match your current search.</p>
+            <p>No jobs match your current filters.</p>
 
             <button
               type="button"
               className="button secondary"
-              onClick={clearSearch}
+              onClick={resetFilters}
             >
-              Clear search
+              Reset Filters
             </button>
           </div>
         ) : (
