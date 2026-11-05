@@ -48,7 +48,7 @@ describe('US-13 - Deadline Reminders UI', () => {
     expect(screen.getByText('Example Company'))
       .toBeInTheDocument();
 
-    expect(screen.getByText('2026-11-08'))
+    expect(screen.getByText('November 8, 2026'))
       .toBeInTheDocument();
 
     expect(screen.getByRole('link', { name: 'View job' }))

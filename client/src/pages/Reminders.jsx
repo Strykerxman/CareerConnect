@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getDeadlineStatus } from '../utils/deadlines';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -91,32 +92,69 @@ function Reminders() {
       ) : reminders.length === 0 ? (
         <div className="card empty-state">
           <h2>No upcoming deadlines.</h2>
-          <p>You have no saved jobs with deadlines in the next three days.</p>
+          <p>
+            You have no saved jobs with deadlines in the next three days.
+          </p>
         </div>
       ) : (
         <ul className="job-list">
-          {reminders.map(job => (
-            <li key={job.jobId}>
-              <div className="card">
-                <h2>{job.title}</h2>
-                <p>{job.company}</p>
+          {reminders.map(job => {
+            // Task 13.4: Calculate deadline status once
+            const deadlineStatus = getDeadlineStatus(
+              job.application_deadline
+            );
 
-                <p>
-                  Application deadline:{' '}
-                  <time dateTime={job.application_deadline}>
-                    {job.application_deadline}
-                  </time>
-                </p>
+            // Format the deadline for display
+            const formattedDeadline = deadlineStatus
+              ? new Date(
+                  `${job.application_deadline}T00:00:00Z`
+                ).toLocaleDateString('en-US', {
+                  timeZone: 'UTC',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : null;
 
-                <Link
-                  to={`/jobs/${job.jobId}`}
-                  className="button secondary"
-                >
-                  View job
-                </Link>
-              </div>
-            </li>
-          ))}
+            return (
+              <li key={job.jobId}>
+                <div className="card">
+                  <h2>{job.title}</h2>
+
+                  <p>{job.company}</p>
+
+                  {/* Display the application deadline */}
+                  {formattedDeadline && (
+                    <p>
+                      <strong>Application deadline: </strong>
+                      <time dateTime={job.application_deadline}>
+                        {formattedDeadline}
+                      </time>
+                    </p>
+                  )}
+
+                  {/* Task 13.4: Deadline indicator */}
+                  {deadlineStatus && (
+                    <div className="reminder-deadline-status">
+                      <span
+                        className={`deadline-badge deadline-${deadlineStatus.type}`}
+                      >
+                        {deadlineStatus.label}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Link to the job details page */}
+                  <Link
+                    to={`/jobs/${job.jobId}`}
+                    className="button secondary"
+                  >
+                    View job
+                  </Link>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

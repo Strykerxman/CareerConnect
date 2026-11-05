@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import ApplyForm from '../components/ApplyForm.jsx';
 import SaveJobButton from '../components/SaveJobButton.jsx';
 import useSavedJobs from '../useSavedJobs';
+import { getDeadlineStatus } from '../utils/deadlines';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -77,6 +78,7 @@ function JobDetails() {
         <div className="banner error" role="alert">
           {error}
         </div>
+
         <Link to="/jobs" className="button secondary">
           Back to Jobs
         </Link>
@@ -89,6 +91,7 @@ function JobDetails() {
       <main className="page">
         <div className="card empty-state">
           <h2>Job not found</h2>
+
           <Link to="/jobs" className="button secondary">
             Back to Jobs
           </Link>
@@ -102,8 +105,11 @@ function JobDetails() {
     .filter(Boolean)
     .join(' · ');
 
-  // Format the application deadline, if one exists
-  const formattedDeadline = job.application_deadline
+  // Task 13.4 - Calculate the deadline status
+  const deadlineStatus = getDeadlineStatus(job.application_deadline);
+
+  // Format the application deadline, if valid
+  const formattedDeadline = deadlineStatus
     ? new Date(`${job.application_deadline}T00:00:00Z`)
         .toLocaleDateString('en-US', {
           timeZone: 'UTC',
@@ -139,6 +145,15 @@ function JobDetails() {
                 {formattedDeadline}
               </time>
             </p>
+          )}
+
+          {/* Task 13.4: Display deadline indicator */}
+          {deadlineStatus && (
+            <span
+              className={`deadline-badge deadline-${deadlineStatus.type}`}
+            >
+              {deadlineStatus.label}
+            </span>
           )}
 
           {saved.canSave && (
