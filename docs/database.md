@@ -112,3 +112,18 @@ are separate tasks. To validate the backend, run `npm test` in `server/`;
 `server/tests/jobs.test.js` inserts fixtures into an isolated in-memory database
 and exercises the HTTP endpoint. A fresh development database returns an empty
 list until postings are added by a future posting-management feature or manually.
+
+## Saved jobs API
+
+US-09 / Task 9.2. All routes require a `Bearer` token (HTTP 401 without one) and
+are limited to job seekers (recruiters get HTTP 403).
+
+| Method | Route | Result |
+| --- | --- | --- |
+| `POST` | `/api/saved-jobs/:jobId` | 201 when saved, 200 if it was already saved (no duplicate row) |
+| `DELETE` | `/api/saved-jobs/:jobId` | 204 when removed, 404 if it was not saved |
+| `GET` | `/api/saved-jobs` | 200 with `{ "savedJobs": [...] }`, newest save first |
+
+Invalid job IDs return HTTP 400. Only open jobs can be saved (HTTP 404 otherwise),
+and closed jobs are left out of the list. Each saved job has the same fields as
+`GET /api/jobs` plus `savedAt`. Tests are in `server/tests/saved-jobs.test.js`.

@@ -13,6 +13,7 @@ function createApp() {
   app.use('/api/resume', require('./routes/resume'));
   app.use('/api/jobs', require('./routes/jobs'));
   app.use('/api/applications', require('./routes/applications'));
+  app.use('/api/saved-jobs', require('./routes/savedJobs'));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
   // eslint-disable-next-line no-unused-vars
