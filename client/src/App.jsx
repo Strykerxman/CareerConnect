@@ -1,3 +1,4 @@
+import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import Profile from './pages/Profile';
@@ -9,6 +10,9 @@ import JobDetails from './pages/JobDetails';
 import MyApplications from './pages/MyApplications';
 import ApplicationStats from "./pages/ApplicationStats";
 import SavedJobs from './pages/SavedJobs';
+import RequireAuth from './components/RequireAuth';
+import MyJobs from './pages/MyJobs';
+import JobForm from './pages/JobForm';
 
 function App() {
   return (
@@ -25,6 +29,13 @@ function App() {
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/application-stats" element={<ApplicationStats />} />
+
+        {/* Posting and managing jobs belongs to recruiters. */}
+        <Route element={<RequireAuth role="recruiter" />}>
+          <Route path="/recruiter/jobs" element={<MyJobs />} />
+          <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
+          <Route path="/recruiter/jobs/:id/edit" element={<JobForm key="edit" />} />
+        </Route>
       </Route>
     </Routes>
   );
