@@ -39,6 +39,8 @@ npm run dev
 
 For local configuration, copy `server/.env.example` to `server/.env` and replace `JWT_SECRET` with a private value. The API runs at `http://localhost:4000` by default. Multer and the other server dependencies are already installed by `npm ci`; do not install them separately.
 
+AI resume feedback (US-15) uses the Google Gemini API. To enable it, create a free key at https://aistudio.google.com/apikey and add `GEMINI_API_KEY=<your key>` to `server/.env`. On Gemini's free tier, Google may use the text it receives to improve its models; contact details are removed before resumes are sent. Without a key the rest of the app works normally and the feedback button shows an "unavailable" message. The tests never call the real API.
+
 ### Client
 
 In another terminal:
