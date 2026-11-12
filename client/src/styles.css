@@ -1272,3 +1272,37 @@ a {
 .resume-feedback .banner + .resume-feedback-note {
   margin: 0 0 12px;
 }
+
+/* US-05 / Task 05-01 — Resume preview */
+.resume-preview {
+  flex-basis: 100%;
+  padding: 18px 20px;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.resume-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.resume-preview-header h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.resume-preview-frame {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  min-height: 420px;
+
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+}
