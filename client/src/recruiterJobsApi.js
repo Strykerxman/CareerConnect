@@ -64,3 +64,7 @@ export async function getCompanyName(options) {
   const data = await request('/api/profile', options);
   return (data?.profile?.company_name || '').trim();
 }
+
+export const listApplicants = (id, options) => request(`${base}/${id}/applications`, options);
+export const updateApplicationStatus = (jobId, applicationId, status, options = {}) =>
+  request(`${base}/${jobId}/applications/${applicationId}`, { ...options, method: 'PATCH', body: { status } });
