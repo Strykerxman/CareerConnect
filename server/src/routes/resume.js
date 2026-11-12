@@ -2,9 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mammoth = require('mammoth');
 
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { extractResumeText, ResumeTextError, PDF_TYPE, DOCX_TYPE } = require('../resumeText');
+const resumeFeedback = require('../resumeFeedback');
 
 const router = express.Router();
 
@@ -168,6 +171,114 @@ router.get('/:id/download', requireAuth, (req, res) => {
   }
 
   return res.download(filePath, resume.original_name);
+});
+
+
+// --------------------------------------------------
+// US-05 / Task 05-01 — View Resume Without Downloading
+// --------------------------------------------------
+
+// Rules for the DOCX preview page: no scripts, links or outside requests,
+// only inline styles and the images embedded in the document.
+const DOCX_PREVIEW_POLICY = "default-src 'none'; img-src data:; style-src 'unsafe-inline'";
+
+router.get('/:id/view', requireAuth, async (req, res) => {
+
+  const resume = getDb()
+    .prepare(`
+      SELECT *
+      FROM resumes
+      WHERE id = ? AND user_id = ?
+    `)
+    .get(req.params.id, req.user.id);
+
+  if (!resume) {
+    return res.status(404).json({
+      error: 'Resume not found.'
+    });
+  }
+
+  const filePath = path.join(uploadDirectory, resume.stored_name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      error: 'Resume file not found.'
+    });
+  }
+
+  res.set('X-Content-Type-Options', 'nosniff');
+
+  // Browsers can show PDFs themselves; "inline" opens it instead of downloading.
+  if (resume.file_type === PDF_TYPE) {
+    res.type('application/pdf');
+    res.set('Content-Disposition', `inline; filename="${encodeURIComponent(resume.original_name)}"`);
+    return res.sendFile(filePath);
+  }
+
+  // Browsers cannot show DOCX files, so convert it to a simple web page.
+  if (resume.file_type === DOCX_TYPE) {
+    try {
+      const { value: html } = await mammoth.convertToHtml({ path: filePath });
+      res.set('Content-Security-Policy', DOCX_PREVIEW_POLICY);
+      return res.type('html').send(html);
+    } catch (error) {
+      return res.status(422).json({
+        error: 'This resume could not be displayed. Try downloading it instead.'
+      });
+    }
+  }
+
+  return res.status(415).json({
+    error: 'This file type cannot be displayed.'
+  });
+});
+
+
+// --------------------------------------------------
+// US-15 — AI Resume Feedback
+// --------------------------------------------------
+
+// Tasks 15.1, 15.2, 15.4 — Analyze one of the user's resumes.
+// The resume file and record are only read, never changed, and the
+// feedback is not stored.
+router.post('/:id/feedback', requireAuth, async (req, res, next) => {
+
+  const resume = getDb()
+    .prepare(`
+      SELECT *
+      FROM resumes
+      WHERE id = ? AND user_id = ?
+    `)
+    .get(req.params.id, req.user.id);
+
+  if (!resume) {
+    return res.status(404).json({
+      error: 'Resume not found.'
+    });
+  }
+
+  const filePath = path.join(uploadDirectory, resume.stored_name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      error: 'Resume file not found.'
+    });
+  }
+
+  try {
+    const text = await extractResumeText(filePath, resume.file_type);
+    const feedback = await resumeFeedback.analyzeResume(text);
+
+    return res.json({ feedback });
+  } catch (error) {
+    if (error instanceof ResumeTextError) {
+      return res.status(422).json({ error: error.message });
+    }
+    if (error instanceof resumeFeedback.FeedbackError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    return next(error);
+  }
 });
 
 

@@ -8,12 +8,17 @@
 
   "type": "module",
 
-"scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "test": "vitest"
-},
+  "scripts": {
+
+    "dev": "vite",
+
+    "build": "vite build",
+
+    "preview": "vite preview",
+
+    "test": "vitest"
+
+  },
 
   "dependencies": {
 
@@ -37,7 +42,7 @@
 
     "jsdom": "^30.1.3",
 
-    "vitest": "^5.0.5"
+    "vitest": "^3.2.7"
 
   }
 
