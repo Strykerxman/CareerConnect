@@ -1214,3 +1214,56 @@ a {
   }
 }
 
+
+/* =========================
+   AI RESUME FEEDBACK (US-15)
+   ========================= */
+
+.resume-item {
+  flex-wrap: wrap;
+}
+
+.resume-feedback {
+  flex-basis: 100%;
+  padding: 18px 20px;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.resume-feedback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resume-feedback h3,
+.resume-feedback h4 {
+  margin: 0;
+}
+
+.resume-feedback h4 {
+  margin-top: 16px;
+}
+
+.resume-feedback ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+.resume-feedback li + li {
+  margin-top: 6px;
+}
+
+.resume-feedback-note {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.resume-feedback .banner + .resume-feedback-note {
+  margin: 0 0 12px;
+}
