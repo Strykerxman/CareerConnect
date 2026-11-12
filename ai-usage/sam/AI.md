@@ -1,0 +1,1 @@
+I used AI (Claude) to help debug the code for the Saved Jobs feature (US-09). For the AI resume feedback feature (US-15), I used it to research AI services that offer a free API key, which led to choosing Google Gemini, and it then helped me integrate the Gemini API into the app. I reviewed and tested all AI-assisted code before merging it.
