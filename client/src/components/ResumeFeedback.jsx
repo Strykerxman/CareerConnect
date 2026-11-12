@@ -47,7 +47,15 @@ function ResumeFeedback({ state, onClose }) {
 
       {CATEGORIES.map(({ key, label }) => {
         const items = suggestions.filter(item => item.category === key);
-        if (items.length === 0) return null;
+        // AT-US15-01 — Always show all three categories, even when one needs no changes.
+        if (items.length === 0) {
+          return (
+            <div key={key}>
+              <h4>{label}</h4>
+              <p className="resume-feedback-empty">No changes suggested. This part of your resume looks good.</p>
+            </div>
+          );
+        }
         return (
           <div key={key}>
             <h4>{label}</h4>

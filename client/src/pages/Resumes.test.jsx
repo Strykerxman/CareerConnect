@@ -57,6 +57,22 @@ describe('Resumes page - AI feedback (US-15)', () => {
     );
   });
 
+  it('still shows every category when one has no suggestions', async () => {
+    const withoutFormatting = {
+      ...feedback,
+      suggestions: feedback.suggestions.filter(item => item.category !== 'formatting'),
+    };
+    mockFetch({ ok: true, json: async () => ({ feedback: withoutFormatting }) });
+
+    render(<Resumes />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Get AI Feedback' }));
+
+    expect(await screen.findByRole('heading', { name: 'Formatting' })).toBeInTheDocument();
+    expect(screen.getByText('No changes suggested. This part of your resume looks good.')).toBeInTheDocument();
+    expect(screen.getByText('Add numbers:')).toBeInTheDocument();
+    expect(screen.getByText('Group skills:')).toBeInTheDocument();
+  });
+
   it('shows an error and says the resume was not changed when analysis fails', async () => {
     mockFetch({
       ok: false,
