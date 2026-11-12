@@ -1,6 +1,9 @@
+import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { getUser } from '../auth';
 
 function AppLayout() {
+  const isRecruiter = getUser()?.role === 'recruiter';
   const navClass = ({ isActive }) =>
     isActive ? 'nav-link active' : 'nav-link';
 
@@ -34,6 +37,11 @@ function AppLayout() {
             <NavLink to="/saved-jobs" className={navClass}>
               Saved Jobs
             </NavLink>
+            {isRecruiter && (
+              <NavLink to="/recruiter/jobs" className={navClass}>
+                Dashboard
+              </NavLink>
+            )}
           </nav>
         </div>
       </header>

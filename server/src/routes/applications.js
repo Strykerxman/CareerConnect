@@ -200,12 +200,13 @@ router.get('/stats/timeline', requireAuth, (req, res) => {
 
     const rows = getDb()
       .prepare(`
-        SELECT created_at
-        FROM applications
-        WHERE user_id = ?
-          AND created_at IS NOT NULL
-          AND datetime(created_at) >= datetime(?)
-        ORDER BY created_at ASC
+        SELECT applied_at
+    FROM applications
+    WHERE user_id = ?
+      AND applied_at IS NOT NULL
+      AND datetime(applied_at) >= datetime(?)
+      AND datetime(applied_at) <= datetime('now')
+    ORDER BY applied_at ASC
       `)
       .all(
         req.user.id,
@@ -231,7 +232,7 @@ router.get('/stats/timeline', requireAuth, (req, res) => {
     for (const row of rows) {
       // SQLite CURRENT_TIMESTAMP uses UTC.
       const submitted = new Date(
-        row.created_at.replace(' ', 'T') + 'Z'
+        row.applied_at.replace(' ', 'T') + 'Z'
       );
 
       if (Number.isNaN(submitted.getTime())) continue;
