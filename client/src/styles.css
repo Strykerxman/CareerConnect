@@ -1645,3 +1645,44 @@ a {
   gap: 2px;
   font-weight: 400;
 }
+
+
+/* US-13: Application deadline indicators */
+
+.deadline-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 6px 12px;
+  margin: 8px 0 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.deadline-today,
+.deadline-expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.deadline-soon {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.deadline-later {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Task 13.4: Reminder deadline layout */
+
+.reminder-deadline-status {
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+
+.reminder-deadline-status .deadline-badge {
+  margin: 0;
+}

@@ -76,6 +76,26 @@ describe('Task 6.7 - Single Job Details API', () => {
 
     expect(res.status).toBe(404);
   });
+  
+  test('returns the application deadline in job details', async () => {
+    const id = createJob();
+
+    // Give the job an application deadline
+    getDb().prepare(`
+      UPDATE jobs
+      SET application_deadline = ?
+      WHERE id = ?
+  ` ).run('2026-11-08', id);
+
+    // Request the job details
+    const res = await request(app)
+      .get(`/api/jobs/${id}`);
+
+    // Verify the deadline
+    expect(res.status).toBe(200);
+    expect(res.body.job.application_deadline)
+      .toBe('2026-11-08');
+  });
 
   test.each(['abc', '0', '-1', '1.5'])(
     'returns 400 for invalid ID %s',

@@ -20,6 +20,7 @@ function addJob(overrides = {}) {
     category: 'Engineering',
     description: 'Build web applications.',
     requirements: 'Experience with JavaScript.',
+    application_deadline: null,
     status: 'open',
     created_at: '2026-10-22 12:00:00',
     ...overrides,
@@ -53,6 +54,7 @@ describe('US-06 / Task 6.1 — browse available jobs', () => {
       category: 'Engineering',
       description: 'Build web applications.',
       requirements: 'Experience with JavaScript.',
+      application_deadline: null,
       created_at: '2026-10-22 12:00:00',
     }] });
   });
@@ -68,6 +70,25 @@ describe('US-06 / Task 6.1 — browse available jobs', () => {
     const closed = await request(app).get('/api/jobs');
     expect(closed.status).toBe(200);
     expect(closed.body).toEqual({ jobs: [] });
+  });
+
+  test('returns the application deadline when a job has one', async () => {
+  const id = addJob();
+
+  // Assign a deadline to the job
+  getDb().prepare(`
+    UPDATE jobs
+    SET application_deadline = ?
+    WHERE id = ?
+  `).run('2026-11-08', id);
+
+  // Request the jobs from the API
+  const res = await request(app).get('/api/jobs');
+
+  // Verify the deadline is returned correctly
+  expect(res.status).toBe(200);
+  expect(res.body.jobs[0].application_deadline)
+    .toBe('2026-11-08');
   });
 
   test('lists jobs from different recruiters newest first with a stable order for ties', async () => {
@@ -150,7 +171,7 @@ describe('US-07 / Task 7.4 — job keyword search', () => {
     for (const job of res.body.jobs) {
       expect(Object.keys(job).sort()).toEqual([
         'id', 'title', 'company', 'location', 'type', 'category',
-        'description', 'requirements', 'created_at',
+        'description', 'requirements', 'application_deadline', 'created_at',
       ].sort());
     }
   });

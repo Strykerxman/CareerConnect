@@ -23,6 +23,7 @@ erDiagram
     TEXT category
     TEXT description
     TEXT requirements
+    TEXT application_deadline "nullable, YYYY-MM-DD"
     TEXT status "open | closed"
     TEXT created_at
   }
