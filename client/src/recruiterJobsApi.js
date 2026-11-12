@@ -65,6 +65,9 @@ export async function getCompanyName(options) {
   return (data?.profile?.company_name || '').trim();
 }
 
-export const listApplicants = (id, options) => request(`${base}/${id}/applications`, options);
+export const listApplicants = (id, { filters = {}, ...options } = {}) => {
+  const query = new URLSearchParams(filters).toString();
+  return request(`${base}/${id}/applications${query ? `?${query}` : ''}`, options);
+};
 export const updateApplicationStatus = (jobId, applicationId, status, options = {}) =>
   request(`${base}/${jobId}/applications/${applicationId}`, { ...options, method: 'PATCH', body: { status } });

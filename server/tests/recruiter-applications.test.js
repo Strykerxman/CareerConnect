@@ -111,3 +111,67 @@ test('returns 404 for missing jobs or applications', async () => {
   expect((await patch('Interview', recruiter, 999999)).status).toBe(404);
   expect((await patch('Interview', recruiter, jobId, 999999)).status).toBe(404);
 });
+
+describe('applicant filters', () => {
+  let ids;
+  beforeEach(async () => {
+    // Mix SQLite's default timestamp format with ISO UTC timestamps.
+    getDb().prepare('UPDATE applications SET applied_at = ?, status = ? WHERE id = ?')
+      .run('2024-02-28 23:59:59', 'Applied', applicationId);
+    ids = [applicationId];
+    for (const [date, status] of [
+      ['2024-02-29 00:00:00', 'Interview'],
+      ['2024-02-29T23:59:59.999Z', 'Interview'],
+      ['2024-03-01 00:00:00', 'Offered'],
+      ['2024-03-02 12:00:00', 'Under Review'],
+      ['2024-03-03 12:00:00', 'Rejected'],
+    ]) {
+      const candidate = await registerUser();
+      const res = await request(app).post('/api/applications').set(auth(candidate)).send({ jobId });
+      expect(res.status).toBe(201);
+      ids.push(res.body.application.id);
+      getDb().prepare('UPDATE applications SET applied_at = ?, status = ? WHERE id = ?')
+        .run(date, status, res.body.application.id);
+    }
+  });
+
+  const list = (query = {}, user = recruiter) => request(app).get(path()).query(query).set(auth(user));
+  test.each([
+    ['Applied', [0]], ['Under Review', [4]], ['Interview', [2, 1]], ['Offered', [3]], ['Rejected', [5]],
+  ])('filters by %s', async (status, indexes) => {
+    const res = await list({ status });
+    expect(res.status).toBe(200);
+    expect(res.body.applications.map(a => a.id)).toEqual(indexes.map(i => ids[i]));
+  });
+
+  test.each([
+    [{ from: '2024-02-29' }, [5, 4, 3, 2, 1]],
+    [{ to: '2024-02-29' }, [2, 1, 0]],
+    [{ from: '2024-02-29', to: '2024-02-29' }, [2, 1]],
+    [{ status: 'Interview', from: '2024-02-29', to: '2024-03-03' }, [2, 1]],
+    [{ status: 'Offered', from: '2024-02-29', to: '2024-02-29' }, []],
+    [{}, [5, 4, 3, 2, 1, 0]],
+  ])('combines date/status filters with inclusive UTC boundaries: %j', async (query, indexes) => {
+    const res = await list(query);
+    expect(res.status).toBe(200);
+    expect(res.body.job).toMatchObject({ id: jobId, title: jobInput.title, applicationCount: 6 });
+    expect(res.body.applications.map(a => a.id)).toEqual(indexes.map(i => ids[i]));
+  });
+
+  test.each([
+    { status: 'interview' }, { status: 'Hired' }, { status: '' }, { status: "Applied' OR 1=1 --" },
+    { status: ['Applied', 'Interview'] }, { from: ['2024-02-29', '2024-03-01'] },
+    ...['2023-02-29', '2024-02-30', '2024-04-31', '2024-13-01', '2024-00-01',
+      '2024-01-00', '2024-2-01', 'nonsense', '', '2024-02-29T00:00:00Z'].flatMap(date => [{ from: date }, { to: date }]),
+    { from: '2024-03-01', to: '2024-02-29' },
+  ])('rejects invalid filters: %j', async query => {
+    expect((await list(query)).status).toBe(400);
+  });
+
+  test('enforces ownership, authentication and role with active filters', async () => {
+    const query = { status: 'Interview', from: '2024-02-29' };
+    expect((await request(app).get(path()).query(query)).status).toBe(401);
+    expect((await list(query, seeker)).status).toBe(403);
+    expect((await list(query, other)).status).toBe(404);
+  });
+});

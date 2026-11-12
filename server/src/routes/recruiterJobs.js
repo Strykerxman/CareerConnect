@@ -108,18 +108,44 @@ function findApplication(jobId, applicationId) {
   `).get(jobId, applicationId);
 }
 
+const APPLICATION_STATUSES = ['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'];
+
+function validDate(value) {
+  if (typeof value !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value) || value.startsWith('0000')) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 router.get('/:id/applications', (req, res) => {
   const id = parseId(req, res);
   if (id === null) return undefined;
   const job = findOwnedJob(id, req.user.id);
   if (!job) return notFound(res);
 
+  const { status, from, to } = req.query;
+  if (status !== undefined && !APPLICATION_STATUSES.includes(status)) {
+    return res.status(400).json({ error: 'Choose a valid application status.' });
+  }
+  if ((from !== undefined && !validDate(from)) || (to !== undefined && !validDate(to))) {
+    return res.status(400).json({ error: 'Application dates must be valid calendar dates in YYYY-MM-DD format.' });
+  }
+  if (from && to && from > to) {
+    return res.status(400).json({ error: 'Applied from must be on or before Applied to.' });
+  }
+
+  const conditions = ['a.job_id = ?'];
+  const params = [id];
+  if (status) { conditions.push('a.status = ?'); params.push(status); }
+  // SQLite treats timestamps without an offset as UTC. The exclusive next-day
+  // boundary includes every instant of the requested end date, including fractions.
+  if (from) { conditions.push('julianday(a.applied_at) >= julianday(?)'); params.push(from); }
+  if (to) { conditions.push('julianday(a.applied_at) < julianday(?) + 1'); params.push(to); }
   const applications = getDb().prepare(`
     SELECT ${APPLICATION_COLUMNS} FROM applications a
     JOIN profiles p ON p.user_id = a.user_id
-    WHERE a.job_id = ?
+    WHERE ${conditions.join(' AND ')}
     ORDER BY a.applied_at DESC, a.id DESC
-  `).all(id);
+  `).all(...params);
   return res.json({ job, applications });
 });
 
@@ -136,7 +162,7 @@ router.patch('/:id/applications/:applicationId', (req, res) => {
     return res.status(404).json({ error: 'Application not found.' });
   }
   const status = req.body?.status;
-  if (!['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'].includes(status)) {
+  if (!APPLICATION_STATUSES.includes(status)) {
     return res.status(400).json({ error: 'Choose a valid application status.' });
   }
 
