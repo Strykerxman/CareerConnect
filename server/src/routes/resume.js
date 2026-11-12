@@ -5,6 +5,8 @@ const fs = require('fs');
 
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { extractResumeText, ResumeTextError } = require('../resumeText');
+const resumeFeedback = require('../resumeFeedback');
 
 const router = express.Router();
 
@@ -168,6 +170,54 @@ router.get('/:id/download', requireAuth, (req, res) => {
   }
 
   return res.download(filePath, resume.original_name);
+});
+
+
+// --------------------------------------------------
+// US-15 — AI Resume Feedback
+// --------------------------------------------------
+
+// Tasks 15.1, 15.2, 15.4 — Analyze one of the user's resumes.
+// The resume file and record are only read, never changed, and the
+// feedback is not stored.
+router.post('/:id/feedback', requireAuth, async (req, res, next) => {
+
+  const resume = getDb()
+    .prepare(`
+      SELECT *
+      FROM resumes
+      WHERE id = ? AND user_id = ?
+    `)
+    .get(req.params.id, req.user.id);
+
+  if (!resume) {
+    return res.status(404).json({
+      error: 'Resume not found.'
+    });
+  }
+
+  const filePath = path.join(uploadDirectory, resume.stored_name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      error: 'Resume file not found.'
+    });
+  }
+
+  try {
+    const text = await extractResumeText(filePath, resume.file_type);
+    const feedback = await resumeFeedback.analyzeResume(text);
+
+    return res.json({ feedback });
+  } catch (error) {
+    if (error instanceof ResumeTextError) {
+      return res.status(422).json({ error: error.message });
+    }
+    if (error instanceof resumeFeedback.FeedbackError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    return next(error);
+  }
 });
 
 

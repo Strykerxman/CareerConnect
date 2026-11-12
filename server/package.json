@@ -6,20 +6,24 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "jest --runInBand --passWithNoTests"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --passWithNoTests"
   },
   "jest": {
     "testEnvironment": "node"
   },
   "license": "MIT",
   "dependencies": {
+    "@google/genai": "^3.2.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.4.0"
+    "mammoth": "^1.13.0",
+    "multer": "^2.4.0",
+    "pdf-parse": "^2.4.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "jest": "^30.5.2",

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import ResumeFeedback from '../components/ResumeFeedback';
 
 const API_URL = 'http://localhost:4000';
 
@@ -9,6 +10,7 @@ function Resumes() {
   const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState(false);
   const [banner, setBanner] = useState(null);
+  const [feedback, setFeedback] = useState(null);
   const fileInput = useRef(null);
   const token = localStorage.getItem('token');
 
@@ -125,6 +127,25 @@ function Resumes() {
     }
   }
 
+  // US-15 / Task 15.3 — Request AI feedback for one resume.
+  async function requestFeedback(resume) {
+    setFeedback({ resumeId: resume.id, loading: true });
+    try {
+      const response = await fetch(`${API_URL}/api/resume/${resume.id}/feedback`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Unable to analyze this resume.');
+      setFeedback({ resumeId: resume.id, feedback: data.feedback });
+    } catch (error) {
+      setFeedback({
+        resumeId: resume.id,
+        error: error.message === 'Failed to fetch' ? 'Unable to reach the server. Please try again.' : error.message
+      });
+    }
+  }
+
   function formatSize(bytes) {
     if (!bytes) return '0 KB';
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -193,10 +214,21 @@ function Resumes() {
                   </div>
                 </div>
                 <div className="resume-actions">
+                  <button
+                    className="button primary"
+                    type="button"
+                    onClick={() => requestFeedback(resume)}
+                    disabled={feedback?.loading}
+                  >
+                    {feedback?.loading && feedback.resumeId === resume.id ? 'Analyzing...' : 'Get AI Feedback'}
+                  </button>
                   <button className="button secondary" type="button" onClick={() => downloadResume(resume)}>Download</button>
                   {!resume.is_primary && <button className="button secondary" type="button" onClick={() => makePrimary(resume.id)}>Make Primary</button>}
                   <button className="button danger" type="button" onClick={() => deleteResume(resume)}>Delete</button>
                 </div>
+                {feedback?.resumeId === resume.id && (
+                  <ResumeFeedback state={feedback} onClose={() => setFeedback(null)} />
+                )}
               </article>
             ))}
           </div>
