@@ -282,6 +282,13 @@ function MyJobs() {
 
                       <div className="posting-actions">
                         <Link
+                          to={`/recruiter/jobs/${job.id}/applications`}
+                          className="button secondary"
+                          aria-label={`View applicants for ${job.title}`}
+                        >
+                          View applicants
+                        </Link>
+                        <Link
                           to={`/recruiter/jobs/${job.id}/edit`}
                           className="button secondary"
                           aria-label={`Edit ${job.title}`}

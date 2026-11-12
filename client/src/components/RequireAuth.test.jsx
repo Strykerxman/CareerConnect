@@ -73,7 +73,7 @@ describe('RequireAuth', () => {
 
 // The real route table: the three recruiter pages and the navigation link.
 describe('recruiter routes in the app', () => {
-  const RECRUITER_PAGES = ['/recruiter/jobs', '/recruiter/jobs/new', '/recruiter/jobs/7/edit'];
+  const RECRUITER_PAGES = ['/recruiter/jobs', '/recruiter/jobs/new', '/recruiter/jobs/7/edit', '/recruiter/jobs/7/applications'];
 
   function mockApi() {
     return vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {

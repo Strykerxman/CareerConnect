@@ -95,6 +95,59 @@ router.get('/:id', (req, res) => {
   return res.json({ job });
 });
 
+// Applicant data is always scoped to an owned posting, including closed postings.
+const APPLICATION_COLUMNS = `
+  a.id, p.full_name AS candidateName, a.applied_at AS appliedAt, a.status
+`;
+
+function findApplication(jobId, applicationId) {
+  return getDb().prepare(`
+    SELECT ${APPLICATION_COLUMNS} FROM applications a
+    JOIN profiles p ON p.user_id = a.user_id
+    WHERE a.job_id = ? AND a.id = ?
+  `).get(jobId, applicationId);
+}
+
+router.get('/:id/applications', (req, res) => {
+  const id = parseId(req, res);
+  if (id === null) return undefined;
+  const job = findOwnedJob(id, req.user.id);
+  if (!job) return notFound(res);
+
+  const applications = getDb().prepare(`
+    SELECT ${APPLICATION_COLUMNS} FROM applications a
+    JOIN profiles p ON p.user_id = a.user_id
+    WHERE a.job_id = ?
+    ORDER BY a.applied_at DESC, a.id DESC
+  `).all(id);
+  return res.json({ job, applications });
+});
+
+router.patch('/:id/applications/:applicationId', (req, res) => {
+  const id = parseId(req, res);
+  if (id === null) return undefined;
+  const raw = req.params.applicationId;
+  const applicationId = Number(raw);
+  if (!/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(applicationId)) {
+    return res.status(400).json({ error: 'Invalid application ID.' });
+  }
+  if (!findOwnedJob(id, req.user.id)) return notFound(res);
+  if (!findApplication(id, applicationId)) {
+    return res.status(404).json({ error: 'Application not found.' });
+  }
+  const status = req.body?.status;
+  if (!['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Choose a valid application status.' });
+  }
+
+  getDb().prepare('UPDATE applications SET status = ? WHERE id = ? AND job_id = ?')
+    .run(status, applicationId, id);
+  return res.json({
+    message: 'Application status updated.',
+    application: findApplication(id, applicationId),
+  });
+});
+
 // PATCH /api/recruiter/jobs/:id — update any subset of the editable fields,
 // including `status` to show or hide the posting.
 router.patch('/:id', (req, res) => {

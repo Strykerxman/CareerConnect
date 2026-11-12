@@ -1645,3 +1645,15 @@ a {
   gap: 2px;
   font-weight: 400;
 }
+
+.applicant-status-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.applicant-status-form select {
+  width: auto;
+  max-width: 100%;
+}

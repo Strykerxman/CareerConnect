@@ -44,6 +44,17 @@ describe('MyJobs (recruiter dashboard)', () => {
     localStorage.clear();
   });
 
+  it('links to applicants for both open and closed postings', async () => {
+    mockApi({ 'GET /api/recruiter/jobs': () => reply(200, { jobs: [
+      job(), job({ id: 2, title: 'Closed posting', status: 'closed', applicationCount: 1 }),
+    ] }) });
+    renderPage();
+    expect(await screen.findByRole('link', { name: 'View applicants for Backend Developer' }))
+      .toHaveAttribute('href', '/recruiter/jobs/1/applications');
+    expect(screen.getByRole('link', { name: 'View applicants for Closed posting' }))
+      .toHaveAttribute('href', '/recruiter/jobs/2/applications');
+  });
+
   it('shows an empty state with a link to post a job', async () => {
     mockApi({ 'GET /api/recruiter/jobs': () => reply(200, { jobs: [] }) });
     renderPage();

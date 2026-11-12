@@ -13,6 +13,7 @@ import SavedJobs from './pages/SavedJobs';
 import RequireAuth from './components/RequireAuth';
 import MyJobs from './pages/MyJobs';
 import JobForm from './pages/JobForm';
+import JobApplicants from './pages/JobApplicants';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         {/* Posting and managing jobs belongs to recruiters. */}
         <Route element={<RequireAuth role="recruiter" />}>
           <Route path="/recruiter/jobs" element={<MyJobs />} />
+          <Route path="/recruiter/jobs/:id/applications" element={<JobApplicants />} />
           <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
           <Route path="/recruiter/jobs/:id/edit" element={<JobForm key="edit" />} />
         </Route>
