@@ -88,6 +88,60 @@ describe('Resumes page - AI feedback (US-15)', () => {
     expect(screen.getByText('my-resume.pdf')).toBeInTheDocument();
   });
 
+  it('shows a PDF resume on the page without downloading it (#114)', async () => {
+    const pdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    window.URL.createObjectURL = vi.fn(() => 'blob:resume-preview');
+    window.URL.revokeObjectURL = vi.fn();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+      if (url.endsWith('/view')) {
+        return { ok: true, headers: new Headers({ 'Content-Type': 'application/pdf' }), blob: async () => pdf };
+      }
+      return { ok: true, json: async () => ({ resumes: [resume] }) };
+    });
+
+    render(<Resumes />);
+    fireEvent.click(await screen.findByRole('button', { name: 'View' }));
+
+    const frame = await screen.findByTitle('Preview of my-resume.pdf');
+    expect(frame).toHaveAttribute('src', 'blob:resume-preview');
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/resume\/7\/view$/), expect.anything());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByTitle('Preview of my-resume.pdf')).not.toBeInTheDocument();
+    expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:resume-preview');
+  });
+
+  it('shows a DOCX resume in a sandboxed frame (#114)', async () => {
+    const docxResume = { ...resume, original_name: 'my-resume.docx' };
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+      if (url.endsWith('/view')) {
+        return { ok: true, headers: new Headers({ 'Content-Type': 'text/html' }), text: async () => '<p>Jordan Tester</p>' };
+      }
+      return { ok: true, json: async () => ({ resumes: [docxResume] }) };
+    });
+
+    render(<Resumes />);
+    fireEvent.click(await screen.findByRole('button', { name: 'View' }));
+
+    const frame = await screen.findByTitle('Preview of my-resume.docx');
+    expect(frame).toHaveAttribute('sandbox', '');
+    expect(frame.getAttribute('srcdoc')).toContain('Jordan Tester');
+  });
+
+  it('shows an error when a resume cannot be displayed (#114)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+      if (url.endsWith('/view')) {
+        return { ok: false, json: async () => ({ error: 'This resume could not be displayed. Try downloading it instead.' }) };
+      }
+      return { ok: true, json: async () => ({ resumes: [resume] }) };
+    });
+
+    render(<Resumes />);
+    fireEvent.click(await screen.findByRole('button', { name: 'View' }));
+
+    expect(await screen.findByText('This resume could not be displayed. Try downloading it instead.')).toBeInTheDocument();
+  });
+
   it('closes the feedback panel', async () => {
     mockFetch({ ok: true, json: async () => ({ feedback }) });
 
