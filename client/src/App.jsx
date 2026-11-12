@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import Profile from './pages/Profile';
@@ -7,9 +9,12 @@ import Login from './pages/Login';
 import Jobs from './pages/Jobs';
 import JobDetails from './pages/JobDetails';
 import MyApplications from './pages/MyApplications';
-import ApplicationStats from "./pages/ApplicationStats";
+import ApplicationStats from './pages/ApplicationStats';
 import SavedJobs from './pages/SavedJobs';
 import Reminders from './pages/Reminders';
+import RequireAuth from './components/RequireAuth';
+import MyJobs from './pages/MyJobs';
+import JobForm from './pages/JobForm';
 
 function App() {
   return (
@@ -28,6 +33,12 @@ function App() {
         <Route path="/reminders" element={<Reminders />} />
         <Route path="/application-stats" element={<ApplicationStats />} />
 
+        {/* Recruiter-only job management routes */}
+        <Route element={<RequireAuth role="recruiter" />}>
+          <Route path="/recruiter/jobs" element={<MyJobs />} />
+          <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
+          <Route path="/recruiter/jobs/:id/edit" element={<JobForm key="edit" />} />
+        </Route>
       </Route>
     </Routes>
   );

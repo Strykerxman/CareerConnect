@@ -763,6 +763,7 @@ a {
 .job-details-header .job-actions {
   margin: 16px 0;
 }
+
 .job-search {
   margin-bottom: 24px;
 }
@@ -1254,7 +1255,7 @@ a {
   line-height: 1.5;
 }
 
-.resume-feedback li + li {
+.resume-feedback li+li {
   margin-top: 6px;
 }
 
@@ -1269,7 +1270,7 @@ a {
   font-size: 0.85rem;
 }
 
-.resume-feedback .banner + .resume-feedback-note {
+.resume-feedback .banner+.resume-feedback-note {
   margin: 0 0 12px;
 }
 
@@ -1307,6 +1308,345 @@ a {
   background: #ffffff;
 }
 
+/* Application Timeline */
+
+.timeline-card {
+  margin-top: 24px;
+  padding: 28px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.timeline-header h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.timeline-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.timeline-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background: #edf2ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.timeline-chart {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px;
+  height: 260px;
+}
+
+.timeline-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.timeline-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.timeline-bar-track {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  background: #f5f7fb;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.timeline-bar {
+  width: 100%;
+  background: linear-gradient(180deg, #4776ed, #2457d6);
+  border-radius: 8px 8px 0 0;
+  transition: height 0.3s ease;
+}
+
+.timeline-label {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.timeline-empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .timeline-card {
+    padding: 18px;
+  }
+
+  .timeline-chart {
+    gap: 5px;
+    height: 220px;
+  }
+
+  .timeline-label {
+    font-size: 10px;
+  }
+}
+
+/* RECRUITER JOB POSTINGS
+   ========================= */
+
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header-row .button,
+.form-actions .button,
+.posting-actions .button,
+.empty-state .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.required-mark {
+  color: var(--danger);
+}
+
+.posting-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  overflow-wrap: anywhere;
+}
+
+.posting-info p {
+  margin: 6px 0 0;
+}
+
+.posting-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.posting-title h2 {
+  margin: 0;
+}
+
+.posting-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.status-badge {
+  padding: 3px 8px;
+
+  border-radius: 20px;
+
+  background: var(--success-bg);
+  color: var(--success);
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-badge.closed {
+  background: #eef0f4;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+
+  .posting-card,
+  .page-header-row {
+    flex-direction: column;
+  }
+
+  .posting-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+
+/* =========================
+   RECRUITER DASHBOARD
+   ========================= */
+
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.dashboard-summary .stats-summary-card {
+  padding: 22px;
+}
+
+.dashboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.dashboard-search {
+  flex: 1 1 260px;
+}
+
+.dashboard-sort {
+  flex: 0 1 220px;
+}
+
+.dashboard-search label,
+.dashboard-sort label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dashboard-search input,
+.dashboard-sort select {
+  width: 100%;
+}
+
+.dashboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dashboard-tab {
+  padding: 7px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-tab:hover {
+  background: #f8f9fb;
+}
+
+.dashboard-tab.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.dashboard-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-sort {
+    flex-basis: 100%;
+  }
+}
+
+
+/* Availability (open / closed) choice on the job form */
+
+.availability {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.availability legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.availability-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.availability-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.availability-option:has(input:focus-visible) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.form-group .availability-option input {
+  width: auto;
+  margin-top: 3px;
+  padding: 0;
+}
+
+.availability-option>span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 400;
+}
+
+
 /* US-13: Application deadline indicators */
 
 .deadline-badge {
@@ -1335,7 +1675,7 @@ a {
   color: #1e40af;
 }
 
-/* Task 13.4 - Reminder deadline layout */
+/* Task 13.4: Reminder deadline layout */
 
 .reminder-deadline-status {
   display: flex;

@@ -159,7 +159,111 @@ router.get('/stats', (req, res) => {
     total,
     byStatus,
   });
+
+
 });
+
+/**
+ * GET /api/applications/stats/timeline
+ * Number of applications submitted per week
+ * during the last 8 calendar weeks.
+ */
+router.get('/stats/timeline', requireAuth, (req, res) => {
+  if (req.user.role !== 'job_seeker') {
+    return res.status(403).json({
+      error: 'Only job seekers can view application statistics.',
+    });
+  }
+
+  try {
+    const now = new Date();
+
+    // Start of the current week (Monday, UTC).
+    const currentWeek = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate()
+      )
+    );
+
+    const dayOfWeek = currentWeek.getUTCDay();
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+
+    currentWeek.setUTCDate(
+      currentWeek.getUTCDate() - daysSinceMonday
+    );
+
+    // First day of the eight-week reporting period.
+    const firstWeek = new Date(currentWeek);
+    firstWeek.setUTCDate(firstWeek.getUTCDate() - 7 * 7);
+
+    const rows = getDb()
+      .prepare(`
+        SELECT applied_at
+    FROM applications
+    WHERE user_id = ?
+      AND applied_at IS NOT NULL
+      AND datetime(applied_at) >= datetime(?)
+      AND datetime(applied_at) <= datetime('now')
+    ORDER BY applied_at ASC
+      `)
+      .all(
+        req.user.id,
+        firstWeek.toISOString().slice(0, 19).replace('T', ' ')
+      );
+
+    const weeks = [];
+
+    for (let i = 0; i < 8; i++) {
+      const weekDate = new Date(firstWeek);
+      weekDate.setUTCDate(weekDate.getUTCDate() + i * 7);
+
+      weeks.push({
+        weekStart: weekDate.toISOString().slice(0, 10),
+        count: 0,
+      });
+    }
+
+    const counts = new Map(
+      weeks.map((week) => [week.weekStart, week])
+    );
+
+    for (const row of rows) {
+      // SQLite CURRENT_TIMESTAMP uses UTC.
+      const submitted = new Date(
+        row.applied_at.replace(' ', 'T') + 'Z'
+      );
+
+      if (Number.isNaN(submitted.getTime())) continue;
+
+      const monday = new Date(
+        Date.UTC(
+          submitted.getUTCFullYear(),
+          submitted.getUTCMonth(),
+          submitted.getUTCDate()
+        )
+      );
+
+      const offset = (monday.getUTCDay() + 6) % 7;
+      monday.setUTCDate(monday.getUTCDate() - offset);
+
+      const key = monday.toISOString().slice(0, 10);
+      const week = counts.get(key);
+
+      if (week) week.count++;
+    }
+
+    return res.json({ weeks });
+  } catch (error) {
+    console.error('Failed to retrieve application timeline:', error);
+
+    return res.status(500).json({
+      error: 'Unable to load application timeline.',
+    });
+  }
+});
+
 
 
 module.exports = router;

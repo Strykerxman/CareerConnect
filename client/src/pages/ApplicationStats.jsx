@@ -1,5 +1,6 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
+import ApplicationTimeline from '../components/ApplicationTimeline';
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const STATUSES = [
@@ -158,7 +159,9 @@ export default function ApplicationStats() {
                     </div>
                 )}
             </section>
-
+            
+            {/* Task 12.5 - Weekly application activity */}
+            <ApplicationTimeline />
 
             {stats.total === 0 && (
                 <p className="stats-empty">
