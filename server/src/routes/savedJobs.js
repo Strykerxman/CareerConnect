@@ -30,14 +30,14 @@ function parseJobId(id) {
 // Closed postings are left out because they can no longer be viewed.
 router.get('/', (req, res) => {
   const savedJobs = getDb().prepare(`
-    SELECT j.id, j.title, j.company, j.location, j.type, j.category,
-           j.description, j.requirements, j.created_at,
-           s.saved_at AS savedAt
-    FROM saved_jobs s
-    JOIN jobs j ON j.id = s.job_id
-    WHERE s.user_id = ? AND j.status = 'open'
-    ORDER BY s.saved_at DESC, s.rowid DESC
-  `).all(req.user.id);
+  SELECT j.id, j.title, j.company, j.location, j.type, j.category,
+         j.description, j.requirements, j.application_deadline,
+         j.created_at, s.saved_at AS savedAt
+  FROM saved_jobs s
+  JOIN jobs j ON j.id = s.job_id
+  WHERE s.user_id = ? AND j.status = 'open'
+  ORDER BY s.saved_at DESC, s.rowid DESC
+`).all(req.user.id);
 
   return res.json({ savedJobs });
 });

@@ -15,6 +15,7 @@ function createApp() {
   app.use('/api/recruiter/jobs', require('./routes/recruiterJobs'));
   app.use('/api/applications', require('./routes/applications'));
   app.use('/api/saved-jobs', require('./routes/savedJobs'));
+  app.use('/api/reminders', require('./routes/reminders')); // Task 13.2 - Application deadline reminders
 
   app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
   // eslint-disable-next-line no-unused-vars

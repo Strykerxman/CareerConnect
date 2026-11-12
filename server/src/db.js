@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   description  TEXT NOT NULL,
   requirements TEXT NOT NULL DEFAULT '',
   status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+  application_deadline TEXT,
   created_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -78,11 +79,24 @@ let db;
 function getDb() {
   if (!db) {
     const file = process.env.DB_PATH || path.join(__dirname, '..', 'careerconnect.db');
+
     db = new Database(file);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     db.exec(SCHEMA);
+
+    // Task 13.1 - Add application deadline to existing databases
+    const columns = db.prepare('PRAGMA table_info(jobs)').all();
+
+    const hasDeadline = columns.some(
+      column => column.name === 'application_deadline'
+    );
+
+    if (!hasDeadline) {
+      db.exec('ALTER TABLE jobs ADD COLUMN application_deadline TEXT');
+    }
   }
+
   return db;
 }
 
