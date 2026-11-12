@@ -763,6 +763,7 @@ a {
 .job-details-header .job-actions {
   margin: 16px 0;
 }
+
 .job-search {
   margin-bottom: 24px;
 }
@@ -1254,7 +1255,7 @@ a {
   line-height: 1.5;
 }
 
-.resume-feedback li + li {
+.resume-feedback li+li {
   margin-top: 6px;
 }
 
@@ -1269,7 +1270,7 @@ a {
   font-size: 0.85rem;
 }
 
-.resume-feedback .banner + .resume-feedback-note {
+.resume-feedback .banner+.resume-feedback-note {
   margin: 0 0 12px;
 }
 
@@ -1305,4 +1306,108 @@ a {
   border: 1px solid var(--border);
   border-radius: 6px;
   background: #ffffff;
+}
+
+/* Application Timeline */
+
+.timeline-card {
+  margin-top: 24px;
+  padding: 28px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.timeline-header h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.timeline-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.timeline-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background: #edf2ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.timeline-chart {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px;
+  height: 260px;
+}
+
+.timeline-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.timeline-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.timeline-bar-track {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  background: #f5f7fb;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.timeline-bar {
+  width: 100%;
+  background: linear-gradient(180deg, #4776ed, #2457d6);
+  border-radius: 8px 8px 0 0;
+  transition: height 0.3s ease;
+}
+
+.timeline-label {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.timeline-empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .timeline-card {
+    padding: 18px;
+  }
+
+  .timeline-chart {
+    gap: 5px;
+    height: 220px;
+  }
+
+  .timeline-label {
+    font-size: 10px;
+  }
 }
