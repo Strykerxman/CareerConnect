@@ -141,4 +141,39 @@ describe('US-13 / Task 13.2 - Deadline Reminders API', () => {
     expect(res.body.reminders).toEqual([]);
   });
 
+
+  test('rejects invalid authentication tokens', async () => {
+    const res = await getReminders('invalid-token');
+
+    expect(res.status).toBe(401);
+  });
+      
+  test('removes a reminder when the job is unsaved', async () => {
+    // Create a job with a deadline tomorrow
+    const jobId = createJob('Software Intern', dateAfter(1));
+
+    // Save the job
+    const save = await saveJob(seeker.token, jobId);
+    expect(save.status).toBe(201);
+
+    // Verify the reminder exists
+    const before = await getReminders(seeker.token);
+
+    expect(before.body.reminders.map(job => job.jobId))
+      .toContain(jobId);
+
+    // Unsave the job
+    const unsave = await request(app)
+      .delete(`/api/saved-jobs/${jobId}`)
+      .set('Authorization', `Bearer ${seeker.token}`);
+
+    expect(unsave.status).toBe(204);
+
+    // The reminder should disappear
+    const after = await getReminders(seeker.token);
+
+    expect(after.status).toBe(200);
+    expect(after.body.reminders).toEqual([]);
+  });
+
 });
