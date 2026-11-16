@@ -12,6 +12,7 @@ import MyApplications from './pages/MyApplications';
 import ApplicationStats from './pages/ApplicationStats';
 import SavedJobs from './pages/SavedJobs';
 import Reminders from './pages/Reminders';
+import Notifications from './pages/Notifications';
 import RequireAuth from './components/RequireAuth';
 import MyJobs from './pages/MyJobs';
 import JobForm from './pages/JobForm';
@@ -33,6 +34,11 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/applications" element={<MyApplications />} />
+          <Route path="/saved-jobs" element={<SavedJobs />} />
+          <Route path="/reminders" element={<Reminders />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/application-stats" element={<ApplicationStats />} />
 
           {/* Job-seeker-only pages */}
           <Route element={<RequireAuth role="job_seeker" />}>

@@ -3,6 +3,7 @@ const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
 const { validateJobInput } = require('../validation');
+const { notifyStatusChange } = require('../notifications');
 
 const router = express.Router();
 
@@ -158,7 +159,8 @@ router.patch('/:id/applications/:applicationId', (req, res) => {
     return res.status(400).json({ error: 'Invalid application ID.' });
   }
   if (!findOwnedJob(id, req.user.id)) return notFound(res);
-  if (!findApplication(id, applicationId)) {
+  const current = findApplication(id, applicationId);
+  if (!current) {
     return res.status(404).json({ error: 'Application not found.' });
   }
   const status = req.body?.status;
@@ -166,8 +168,13 @@ router.patch('/:id/applications/:applicationId', (req, res) => {
     return res.status(400).json({ error: 'Choose a valid application status.' });
   }
 
-  getDb().prepare('UPDATE applications SET status = ? WHERE id = ? AND job_id = ?')
-    .run(status, applicationId, id);
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare('UPDATE applications SET status = ? WHERE id = ? AND job_id = ?')
+      .run(status, applicationId, id);
+    // Task 16.3 - Tell the applicant; nothing is sent when the status is unchanged.
+    notifyStatusChange(applicationId, current.status, status);
+  })();
   return res.json({
     message: 'Application status updated.',
     application: findApplication(id, applicationId),
