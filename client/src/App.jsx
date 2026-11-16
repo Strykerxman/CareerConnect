@@ -21,27 +21,38 @@ import JobApplicants from './pages/JobApplicants';
 function App() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
 
-      <Route element={<AppLayout />}>
-        <Route path="/applications" element={<MyApplications />} />
-        <Route path="/saved-jobs" element={<SavedJobs />} />
-        <Route index element={<Navigate to="/register" replace />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/resumes" element={<Resumes />} />
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/reminders" element={<Reminders />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/application-stats" element={<ApplicationStats />} />
+      {/* All other pages require authentication */}
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/profile" replace />} />
 
-        {/* Recruiter-only job management routes */}
-        <Route element={<RequireAuth role="recruiter" />}>
-          <Route path="/recruiter/jobs" element={<MyJobs />} />
-          <Route path="/recruiter/jobs/:id/applications" element={<JobApplicants />} />
-          <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
-          <Route path="/recruiter/jobs/:id/edit" element={<JobForm key="edit" />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/resumes" element={<Resumes />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/applications" element={<MyApplications />} />
+          <Route path="/saved-jobs" element={<SavedJobs />} />
+          <Route path="/reminders" element={<Reminders />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/application-stats" element={<ApplicationStats />} />
+
+          {/* Recruiter-only routes */}
+          <Route element={<RequireAuth role="recruiter" />}>
+            <Route path="/recruiter/jobs" element={<MyJobs />} />
+            <Route
+              path="/recruiter/jobs/:id/applications"
+              element={<JobApplicants />}
+            />
+            <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
+            <Route
+              path="/recruiter/jobs/:id/edit"
+              element={<JobForm key="edit" />}
+            />
+          </Route>
         </Route>
       </Route>
     </Routes>
