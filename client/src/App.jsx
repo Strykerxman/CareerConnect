@@ -24,28 +24,36 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
 
-      {/* All other pages require authentication */}
+      {/* All pages below require authentication */}
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/profile" replace />} />
 
+          {/* Shared pages: recruiters and job seekers */}
           <Route path="/profile" element={<Profile />} />
-          <Route path="/resumes" element={<Resumes />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/applications" element={<MyApplications />} />
-          <Route path="/saved-jobs" element={<SavedJobs />} />
-          <Route path="/reminders" element={<Reminders />} />
-          <Route path="/application-stats" element={<ApplicationStats />} />
 
-          {/* Recruiter-only routes */}
+          {/* Job-seeker-only pages */}
+          <Route element={<RequireAuth role="job_seeker" />}>
+            <Route path="/resumes" element={<Resumes />} />
+            <Route path="/applications" element={<MyApplications />} />
+            <Route path="/saved-jobs" element={<SavedJobs />} />
+            <Route path="/reminders" element={<Reminders />} />
+            <Route path="/application-stats" element={<ApplicationStats />} />
+          </Route>
+
+          {/* Recruiter-only pages */}
           <Route element={<RequireAuth role="recruiter" />}>
             <Route path="/recruiter/jobs" element={<MyJobs />} />
             <Route
               path="/recruiter/jobs/:id/applications"
               element={<JobApplicants />}
             />
-            <Route path="/recruiter/jobs/new" element={<JobForm key="new" />} />
+            <Route
+              path="/recruiter/jobs/new"
+              element={<JobForm key="new" />}
+            />
             <Route
               path="/recruiter/jobs/:id/edit"
               element={<JobForm key="edit" />}

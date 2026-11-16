@@ -41,7 +41,7 @@ function AppLayout() {
               Profile
             </NavLink>
 
-            <NavLink to="/resumes" className={navClass}>
+            {/* <NavLink to="/resumes" className={navClass}>
               Resumes
             </NavLink>
 
@@ -59,13 +59,22 @@ function AppLayout() {
 
             <NavLink to="/reminders" className={navClass}>
               Reminders
-            </NavLink>
+            </NavLink> */}
 
 
             {isRecruiter && (
               <NavLink to="/recruiter/jobs" className={navClass}>
                 Dashboard
               </NavLink>
+            )}
+            {!isRecruiter && (
+              <>
+                <NavLink to="/resumes" className={navClass}>Resumes</NavLink>
+                <NavLink to="/applications" className={navClass}>My Applications</NavLink>
+                <NavLink to="/application-stats" className={navClass}>Statistics</NavLink>
+                <NavLink to="/saved-jobs" className={navClass}>Saved Jobs</NavLink>
+                <NavLink to="/reminders" className={navClass}>Reminders</NavLink>
+              </>
             )}<button
               type="button"
               className="logout-button"
