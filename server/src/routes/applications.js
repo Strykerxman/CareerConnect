@@ -1,6 +1,7 @@
 const express = require('express');
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { notifyNewApplication } = require('../notifications');
 
 const router = express.Router();
 
@@ -62,15 +63,22 @@ router.post('/', (req, res) => {
   }
 
   try {
-    const result = db.prepare(`
-      INSERT INTO applications (job_id, user_id, resume_id)
-      VALUES (?, ?, ?)
-    `).run(jobId, req.user.id, resumeId ?? null);
+    const applicationId = db.transaction(() => {
+      const result = db.prepare(`
+        INSERT INTO applications (job_id, user_id, resume_id)
+        VALUES (?, ?, ?)
+      `).run(jobId, req.user.id, resumeId ?? null);
+
+      const id = Number(result.lastInsertRowid);
+      // Task 16.3 - Tell the recruiter who owns the posting.
+      notifyNewApplication(id);
+      return id;
+    })();
 
     return res.status(201).json({
       message: 'Application submitted successfully.',
       application: {
-        id: Number(result.lastInsertRowid),
+        id: applicationId,
         jobId,
         status: 'Applied',
       },

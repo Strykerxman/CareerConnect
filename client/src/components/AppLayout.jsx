@@ -2,6 +2,7 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { getUser } from '../auth';
+import NotificationsLink from './NotificationsLink';
 
 function AppLayout() {
   const isRecruiter = getUser()?.role === 'recruiter';
@@ -45,6 +46,8 @@ function AppLayout() {
             <NavLink to="/reminders" className={navClass}>
               Reminders
             </NavLink>
+
+            <NotificationsLink className={navClass} />
 
             {isRecruiter && (
               <NavLink to="/recruiter/jobs" className={navClass}>

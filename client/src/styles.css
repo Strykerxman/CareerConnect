@@ -1697,3 +1697,94 @@ a {
 .reminder-deadline-status .deadline-badge {
   margin: 0;
 }
+
+/* US-16: Notifications */
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: 6px;
+  border-radius: 10px;
+  background: #d92d20;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.notifications-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.notifications-filter {
+  display: flex;
+  gap: 8px;
+}
+
+.notification-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification.is-unread {
+  border-left: 4px solid var(--primary);
+}
+
+.notification.is-read {
+  opacity: 0.8;
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.notification-type {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.notification-type.type-interview_invitation {
+  background: #edfaf3;
+  color: #17633a;
+}
+
+.notification-type.type-deadline_reminder {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.notification-dot {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.notification-message {
+  margin: 10px 0 14px;
+  color: var(--text);
+}
+
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

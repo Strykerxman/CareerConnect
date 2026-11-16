@@ -46,6 +46,17 @@ erDiagram
     INTEGER job_id PK, FK "deleted with job"
     TEXT saved_at
   }
+  USERS ||--o{ NOTIFICATIONS : receives
+  NOTIFICATIONS {
+    INTEGER id PK
+    INTEGER user_id FK "recipient, deleted with user"
+    TEXT type "application_status | interview_invitation | new_application | deadline_reminder"
+    TEXT title
+    TEXT message
+    TEXT link "page to open in the app"
+    INTEGER is_read "0 | 1"
+    TEXT created_at
+  }
 ```
 
 Design notes:
@@ -128,3 +139,42 @@ are limited to job seekers (recruiters get HTTP 403).
 Invalid job IDs return HTTP 400. Only open jobs can be saved (HTTP 404 otherwise),
 and closed jobs are left out of the list. Each saved job has the same fields as
 `GET /api/jobs` plus `savedAt`. Tests are in `server/tests/saved-jobs.test.js`.
+
+## Notifications
+
+US-16 / Task 16.1. The `notifications` table stores in-app notifications; `user_id` is the
+recipient. Rows are deleted with the user (`ON DELETE CASCADE`). `type` is limited by a
+`CHECK` constraint to the four supported types, and `is_read` is `0` or `1`. An index on
+(`user_id`, `is_read`, `created_at`) keeps the list and unread count fast. A partial unique
+index on (`user_id`, `link`) for `deadline_reminder` rows makes sure a job seeker is reminded
+about each saved job only once, even after dismissing the reminder. Existing databases gain
+the table on startup.
+
+Notifications are created by the server (Task 16.3, `server/src/notifications.js`):
+
+| Event | Recipient | Type |
+| --- | --- | --- |
+| A job seeker applies to a posting | The recruiter who owns it | `new_application` |
+| A recruiter changes an application's status | The applicant | `application_status` |
+| The new status is `Interview` | The applicant | `interview_invitation` |
+| A saved open job's deadline is within 3 days | The job seeker | `deadline_reminder` |
+
+Saving the same status again sends nothing. There is no background scheduler, so deadline
+reminders are created when the job seeker next loads their notifications or unread count.
+
+### Notifications API
+
+Task 16.2. All routes require a `Bearer` token (HTTP 401 without one) and only touch the
+signed-in user's own notifications.
+
+| Method | Route | Result |
+| --- | --- | --- |
+| `GET` | `/api/notifications` | 200 with `{ "notifications": [...], "unreadCount": n }`, newest first |
+| `GET` | `/api/notifications/unread-count` | 200 with `{ "unreadCount": n }` |
+| `PATCH` | `/api/notifications/:id/read` | 200 with the updated notification and unread count |
+| `POST` | `/api/notifications/read-all` | 200 with `{ "updated": n, "unreadCount": 0 }` |
+| `DELETE` | `/api/notifications/:id` | 204 when dismissed |
+
+Each notification has `id`, `type`, `title`, `message`, `link`, `isRead` (boolean) and
+`createdAt`. A malformed ID returns HTTP 400; a missing notification, or one that belongs
+to another user, returns HTTP 404. Tests are in `server/tests/notifications.test.js`.
