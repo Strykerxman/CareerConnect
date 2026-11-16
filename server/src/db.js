@@ -71,6 +71,32 @@ CREATE TABLE IF NOT EXISTS saved_jobs (
   saved_at TEXT    NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, job_id)
 );
+
+-- Task 16.1 - In-app notifications. user_id is the recipient.
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       TEXT    NOT NULL
+             CHECK (type IN (
+               'application_status',
+               'interview_invitation',
+               'new_application',
+               'deadline_reminder'
+             )),
+  title      TEXT    NOT NULL,
+  message    TEXT    NOT NULL,
+  link       TEXT    NOT NULL DEFAULT '',
+  is_read    INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user
+  ON notifications (user_id, is_read, created_at);
+
+-- A deadline reminder is sent only once per user and job (the link names the job).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_deadline_once
+  ON notifications (user_id, link)
+  WHERE type = 'deadline_reminder';
 `;
 
 
