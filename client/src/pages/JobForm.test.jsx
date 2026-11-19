@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -112,6 +112,7 @@ describe('JobForm', () => {
         category: '',
         description: 'Build APIs.',
         requirements: '',
+        application_deadline: '',
         status: 'open',
       });
       const post = spy.mock.calls.find(([, o]) => o?.method === 'POST');
@@ -260,6 +261,62 @@ describe('JobForm', () => {
       renderAt('/recruiter/jobs/99/edit');
       expect(await screen.findByText('Job posting not found')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Back to my postings' })).toBeInTheDocument();
+    });
+  });
+
+  describe('application deadlines', () => {
+    it('sends the optional deadline when publishing a job', async () => {
+      const spy = mockApi({
+        'GET /api/profile': () => reply(200, { profile: { company_name: 'Acme' } }),
+        'POST /api/recruiter/jobs': () => reply(201, { job: existingJob }),
+      });
+      renderAt('/recruiter/jobs/new');
+      await screen.findByDisplayValue('Acme');
+      await userEvent.type(screen.getByLabelText(/job title/i), 'Developer');
+      await userEvent.type(screen.getByLabelText(/description/i), 'Build our app.');
+      fireEvent.change(screen.getByLabelText('Application deadline'), { target: { value: '2028-02-29' } });
+      await userEvent.click(screen.getByRole('button', { name: 'Publish job' }));
+      await screen.findByRole('heading', { name: 'Postings list' });
+      expect(sentBody(spy, 'POST', '/api/recruiter/jobs').application_deadline).toBe('2028-02-29');
+    });
+
+    it('loads and changes an existing deadline', async () => {
+      const spy = mockApi({
+        'GET /api/recruiter/jobs/7': () => reply(200, { job: { ...existingJob, application_deadline: '2028-02-29' } }),
+        'PATCH /api/recruiter/jobs/7': () => reply(200, { job: existingJob }),
+      });
+      renderAt('/recruiter/jobs/7/edit');
+      const field = await screen.findByLabelText('Application deadline');
+      expect(field).toHaveValue('2028-02-29');
+      fireEvent.change(field, { target: { value: '2028-03-05' } });
+      await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      await screen.findByRole('heading', { name: 'Postings list' });
+      expect(sentBody(spy, 'PATCH', '/api/recruiter/jobs/7').application_deadline).toBe('2028-03-05');
+    });
+
+    it('lets the recruiter clear the deadline', async () => {
+      const spy = mockApi({
+        'GET /api/recruiter/jobs/7': () => reply(200, { job: { ...existingJob, application_deadline: '2028-02-29' } }),
+        'PATCH /api/recruiter/jobs/7': () => reply(200, { job: existingJob }),
+      });
+      renderAt('/recruiter/jobs/7/edit');
+      fireEvent.change(await screen.findByLabelText('Application deadline'), { target: { value: '' } });
+      await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      await screen.findByRole('heading', { name: 'Postings list' });
+      expect(sentBody(spy, 'PATCH', '/api/recruiter/jobs/7').application_deadline).toBe('');
+    });
+
+    it('shows deadline validation errors returned by the server', async () => {
+      mockApi({
+        'GET /api/recruiter/jobs/7': () => reply(200, { job: existingJob }),
+        'PATCH /api/recruiter/jobs/7': () => reply(400, { errors: { application_deadline: 'Enter a valid application deadline (YYYY-MM-DD).' } }),
+      });
+      renderAt('/recruiter/jobs/7/edit');
+      await screen.findByLabelText('Application deadline');
+      await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+      expect(await screen.findByText('Enter a valid application deadline (YYYY-MM-DD).')).toBeInTheDocument();
+      expect(screen.getByLabelText('Application deadline')).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
     });
   });
 });

@@ -53,6 +53,21 @@ function validateJobInput(body, { partial = false } = {}) {
     if (!JOB_STATUSES.includes(input.status)) errors.status = 'Status must be "open" or "closed".';
     else values.status = input.status;
   }
+  if (input.application_deadline !== undefined) {
+    const raw = input.application_deadline;
+    const deadline = typeof raw === 'string' ? raw.trim() : raw;
+    if (deadline === null || deadline === '') {
+      values.application_deadline = null;
+    } else {
+      const date = typeof deadline === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(deadline)
+        && !deadline.startsWith('0000') ? new Date(`${deadline}T00:00:00.000Z`) : null;
+      if (!date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== deadline) {
+        errors.application_deadline = 'Enter a valid application deadline (YYYY-MM-DD).';
+      } else {
+        values.application_deadline = deadline;
+      }
+    }
+  }
   return { errors, values };
 }
 

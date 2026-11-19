@@ -174,7 +174,7 @@ describe('creation', () => {
     const res = await create();
     expect(res.status).toBe(201);
     expect(Object.keys(res.body.job).sort()).toEqual([
-      'applicationCount', 'category', 'company', 'createdAt', 'description', 'id',
+      'applicationCount', 'application_deadline', 'category', 'company', 'createdAt', 'description', 'id',
       'location', 'requirements', 'status', 'title', 'type',
     ]);
     expect(res.body.job.createdAt).toBeTruthy();

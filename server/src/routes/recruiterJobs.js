@@ -12,7 +12,7 @@ router.use(requireRole('recruiter', 'Only recruiters can manage job postings.'))
 
 const JOB_COLUMNS = `
   j.id, j.title, j.company, j.location, j.type, j.category,
-  j.description, j.requirements, j.status, j.created_at AS createdAt,
+  j.description, j.requirements, j.status, j.application_deadline, j.created_at AS createdAt,
   (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) AS applicationCount
 `;
 
@@ -73,11 +73,12 @@ router.post('/', (req, res) => {
   }
 
   const result = db.prepare(`
-    INSERT INTO jobs (recruiter_id, title, company, location, type, category, description, requirements, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO jobs (recruiter_id, title, company, location, type, category, description, requirements, status, application_deadline)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.user.id, values.title, values.company, values.location ?? '', values.type ?? '',
-    values.category ?? '', values.description, values.requirements ?? '', values.status ?? 'open'
+    values.category ?? '', values.description, values.requirements ?? '', values.status ?? 'open',
+    values.application_deadline ?? null
   );
 
   const job = findOwnedJob(Number(result.lastInsertRowid), req.user.id);

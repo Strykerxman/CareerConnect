@@ -13,7 +13,7 @@ const LIMITS = {
   requirements: 5000,
 };
 const EMPTY_FORM = {
-  title: '', company: '', location: '', type: '', category: '', description: '', requirements: '',
+  title: '', company: '', location: '', type: '', category: '', description: '', requirements: '', application_deadline: '',
 };
 const FIELD_ORDER = Object.keys(EMPTY_FORM);
 const AVAILABILITY_OPTIONS = [
@@ -39,6 +39,14 @@ function validate(values) {
   if (!values.title) errors.title = 'Enter the job title.';
   if (!values.company) errors.company = 'Enter the company name.';
   if (!values.description) errors.description = 'Enter the job description.';
+  if (values.application_deadline) {
+    const deadline = values.application_deadline;
+    const date = new Date(`${deadline}T00:00:00.000Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || deadline.startsWith('0000') ||
+        !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== deadline) {
+      errors.application_deadline = 'Enter a valid application deadline (YYYY-MM-DD).';
+    }
+  }
   return errors;
 }
 
@@ -265,6 +273,11 @@ function JobForm() {
           <FormField
             label="Category"
             placeholder="Engineering" {...fieldProps('category')}
+          />
+          <FormField
+            label="Application deadline" type="date"
+            help="Optional. Leave blank if there is no deadline. Dates use UTC."
+            {...fieldProps('application_deadline')}
           />
           <FormField
             label="Description" as="textarea" rows={8} required fullWidth

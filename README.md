@@ -122,3 +122,15 @@ To demonstrate locally, start the server and client using the instructions above
 
 Updates appear for the job seeker after refreshing or revisiting the page. Concurrent recruiter
 sessions use the last saved status; there is no live update or conflict detection.
+
+## Job deadlines
+
+Recruiters can set an optional **Application deadline** when creating or editing a job.
+Clear the field to remove the deadline. Dates use `YYYY-MM-DD` and UTC.
+The recruiter API accepts and returns `application_deadline`; an empty value or `null` clears it.
+Leaving the field out of a PATCH keeps the existing date.
+
+Demo: post a job with tomorrow's deadline, sign in as a job seeker, save it, then open
+**Reminders** and **Notifications**. The saved job appears in the three-day reminder window.
+
+Tracked in #139.
