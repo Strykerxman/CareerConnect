@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function request(path, { method = 'GET', body, signal } = {}) {
+export async function request(path, { method = 'GET', body, signal, responseType = 'json' } = {}) {
   const headers = { Authorization: `Bearer ${getToken()}` };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
@@ -29,6 +29,8 @@ export async function request(path, { method = 'GET', body, signal } = {}) {
     if (error?.name === 'AbortError') throw error;
     throw new ApiError('Cannot reach the server. Make sure the backend is running.');
   }
+
+  if (response.ok && responseType === 'response') return response;
 
   let data = null;
   if (response.status !== 204) {
@@ -71,3 +73,8 @@ export const listApplicants = (id, { filters = {}, ...options } = {}) => {
 };
 export const updateApplicationStatus = (jobId, applicationId, status, options = {}) =>
   request(`${base}/${jobId}/applications/${applicationId}`, { ...options, method: 'PATCH', body: { status } });
+
+export const getCandidateReview = (jobId, applicationId, options) =>
+  request(`${base}/${jobId}/applications/${applicationId}/candidate`, options);
+export const getSubmittedResume = (jobId, applicationId, action, options = {}) =>
+  request(`${base}/${jobId}/applications/${applicationId}/resume/${action}`, { ...options, responseType: 'response' });

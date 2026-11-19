@@ -224,3 +224,22 @@ describe('applicant filters', () => {
     expect(screen.getByRole('heading', { name: 'No applicants match your filters' })).toBeInTheDocument();
   });
 });
+
+
+describe('opening candidate review', () => {
+  it('loads the selected candidate only after clicking View candidate', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(reply(200, { ...payload, applications: [application] }))
+      .mockResolvedValueOnce(reply(200, {
+        candidate: { fullName: 'Ada Candidate', headline: 'Software student', skills: [] }, resume: null,
+      }));
+    renderPage();
+    const button = await screen.findByRole('button', { name: 'View candidate' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    fireEvent.click(button);
+    expect(await screen.findByText('Software student')).toBeInTheDocument();
+    expect(fetch.mock.calls[1][0]).toContain('/api/recruiter/jobs/7/applications/9/candidate');
+    fireEvent.click(screen.getByRole('button', { name: 'Close candidate' }));
+    expect(screen.queryByText('Software student')).not.toBeInTheDocument();
+  });
+});

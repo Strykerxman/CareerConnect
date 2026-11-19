@@ -134,3 +134,13 @@ Demo: post a job with tomorrow's deadline, sign in as a job seeker, save it, the
 **Reminders** and **Notifications**. The saved job appears in the three-day reminder window.
 
 Tracked in #139.
+
+## Candidate review
+
+Open **View applicants** on your posting, then **View candidate**.
+The panel shows the candidate's current name, headline, location, bio, skills, and LinkedIn link.
+You can preview or download the PDF/DOCX submitted with that application.
+If the resume was not attached or has been deleted, the panel says it is unavailable.
+Other recruiters cannot open the candidate or resume through these routes.
+
+Tracked in #141.

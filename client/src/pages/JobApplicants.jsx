@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import CandidateReview from '../components/CandidateReview';
 import { listApplicants, updateApplicationStatus } from '../recruiterJobsApi';
 
 const STATUSES = ['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'];
@@ -9,6 +10,7 @@ function Applicant({ jobId, application, onSaved }) {
   const [saved, setSaved] = useState(application);
   const [status, setStatus] = useState(application.status);
   const [saving, setSaving] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState('');
 
   async function save(event) {
@@ -54,6 +56,11 @@ function Applicant({ jobId, application, onSaved }) {
         </button>
       </form>
       {error && <p className="banner error" role="alert">{error}</p>}
+      <button type="button" className="button secondary" aria-expanded={reviewing}
+        aria-controls={`candidate-${application.id}`} onClick={() => setReviewing(value => !value)}>
+        {reviewing ? 'Close candidate' : 'View candidate'}
+      </button>
+      {reviewing && <CandidateReview jobId={jobId} applicationId={application.id} />}
     </article>
   );
 }

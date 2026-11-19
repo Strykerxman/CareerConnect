@@ -4,6 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
 const { validateJobInput } = require('../validation');
 const { notifyStatusChange } = require('../notifications');
+const { sendResume } = require('../resumeFiles');
 
 const router = express.Router();
 
@@ -150,6 +151,57 @@ router.get('/:id/applications', (req, res) => {
   `).all(...params);
   return res.json({ job, applications });
 });
+
+// Candidate review stays scoped to the posting and application, never a user/resume ID.
+function requireOwnedApplication(req, res, next) {
+  const jobId = parseId(req, res);
+  if (jobId === null) return undefined;
+  const raw = req.params.applicationId;
+  const applicationId = Number(raw);
+  if (!/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(applicationId)) {
+    return res.status(400).json({ error: 'Invalid application ID.' });
+  }
+  if (!findOwnedJob(jobId, req.user.id)) return notFound(res);
+  const application = getDb().prepare(
+    'SELECT id, user_id, resume_id FROM applications WHERE id = ? AND job_id = ?'
+  ).get(applicationId, jobId);
+  if (!application) return res.status(404).json({ error: 'Application not found.' });
+  req.application = application;
+  res.set('Cache-Control', 'private, no-store');
+  return next();
+}
+
+function submittedResume(application) {
+  // Do not fall back to the candidate's newest resume or any other uploaded file.
+  return getDb().prepare('SELECT * FROM resumes WHERE id = ? AND user_id = ?')
+    .get(application.resume_id, application.user_id);
+}
+
+router.get('/:id/applications/:applicationId/candidate', requireOwnedApplication, (req, res) => {
+  const profile = getDb().prepare(`
+    SELECT full_name AS fullName, headline, location, bio, skills, linkedin_url AS linkedinUrl
+    FROM profiles WHERE user_id = ?
+  `).get(req.application.user_id);
+  if (!profile) return res.status(404).json({ error: 'Candidate profile not found.' });
+  try {
+    const skills = JSON.parse(profile.skills || '[]');
+    profile.skills = Array.isArray(skills) ? skills.filter(skill => typeof skill === 'string') : [];
+  } catch { profile.skills = []; }
+  const resume = submittedResume(req.application);
+  return res.json({
+    candidate: profile,
+    resume: resume ? { id: resume.id, originalName: resume.original_name,
+      fileType: resume.file_type, uploadedAt: resume.uploaded_at } : null,
+  });
+});
+
+for (const action of ['view', 'download']) {
+  router.get(`/:id/applications/:applicationId/resume/${action}`, requireOwnedApplication, (req, res) => {
+    const resume = submittedResume(req.application);
+    if (!resume) return res.status(404).json({ error: 'No submitted resume is available for this application.' });
+    return sendResume(res, resume, { download: action === 'download' });
+  });
+}
 
 router.patch('/:id/applications/:applicationId', (req, res) => {
   const id = parseId(req, res);

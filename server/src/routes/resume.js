@@ -2,11 +2,11 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const mammoth = require('mammoth');
+const { uploadDirectory, sendResume } = require('../resumeFiles');
 
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { extractResumeText, ResumeTextError, PDF_TYPE, DOCX_TYPE } = require('../resumeText');
+const { extractResumeText, ResumeTextError } = require('../resumeText');
 const resumeFeedback = require('../resumeFeedback');
 
 const router = express.Router();
@@ -16,7 +16,7 @@ const router = express.Router();
 // Resume upload directory
 // --------------------------------------------------
 
-const uploadDirectory = path.join(__dirname, '..', '..', 'uploads', 'resumes');
+
 
 // Create the directory if it does not exist
 fs.mkdirSync(uploadDirectory, { recursive: true });
@@ -162,25 +162,13 @@ router.get('/:id/download', requireAuth, (req, res) => {
     });
   }
 
-  const filePath = path.join(uploadDirectory, resume.stored_name);
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({
-      error: 'Resume file not found.'
-    });
-  }
-
-  return res.download(filePath, resume.original_name);
+  return sendResume(res, resume, { download: true });
 });
 
 
 // --------------------------------------------------
 // US-05 / Task 05-01 — View Resume Without Downloading
 // --------------------------------------------------
-
-// Rules for the DOCX preview page: no scripts, links or outside requests,
-// only inline styles and the images embedded in the document.
-const DOCX_PREVIEW_POLICY = "default-src 'none'; img-src data:; style-src 'unsafe-inline'";
 
 router.get('/:id/view', requireAuth, async (req, res) => {
 
@@ -198,39 +186,7 @@ router.get('/:id/view', requireAuth, async (req, res) => {
     });
   }
 
-  const filePath = path.join(uploadDirectory, resume.stored_name);
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({
-      error: 'Resume file not found.'
-    });
-  }
-
-  res.set('X-Content-Type-Options', 'nosniff');
-
-  // Browsers can show PDFs themselves; "inline" opens it instead of downloading.
-  if (resume.file_type === PDF_TYPE) {
-    res.type('application/pdf');
-    res.set('Content-Disposition', `inline; filename="${encodeURIComponent(resume.original_name)}"`);
-    return res.sendFile(filePath);
-  }
-
-  // Browsers cannot show DOCX files, so convert it to a simple web page.
-  if (resume.file_type === DOCX_TYPE) {
-    try {
-      const { value: html } = await mammoth.convertToHtml({ path: filePath });
-      res.set('Content-Security-Policy', DOCX_PREVIEW_POLICY);
-      return res.type('html').send(html);
-    } catch (error) {
-      return res.status(422).json({
-        error: 'This resume could not be displayed. Try downloading it instead.'
-      });
-    }
-  }
-
-  return res.status(415).json({
-    error: 'This file type cannot be displayed.'
-  });
+  return sendResume(res, resume);
 });
 
 
