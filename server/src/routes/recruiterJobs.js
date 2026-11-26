@@ -190,8 +190,10 @@ router.get('/:id/applications/:applicationId/candidate', requireOwnedApplication
   const resume = submittedResume(req.application);
   return res.json({
     candidate: profile,
-    resume: resume ? { id: resume.id, originalName: resume.original_name,
-      fileType: resume.file_type, uploadedAt: resume.uploaded_at } : null,
+    resume: resume ? {
+      id: resume.id, originalName: resume.original_name,
+      fileType: resume.file_type, uploadedAt: resume.uploaded_at
+    } : null,
   });
 });
 
@@ -222,11 +224,29 @@ router.patch('/:id/applications/:applicationId', (req, res) => {
   }
 
   const db = getDb();
+
   db.transaction(() => {
-    db.prepare('UPDATE applications SET status = ? WHERE id = ? AND job_id = ?')
-      .run(status, applicationId, id);
-    // Task 16.3 - Tell the applicant; nothing is sent when the status is unchanged.
-    notifyStatusChange(applicationId, current.status, status);
+    // Task 19.3 - Record only actual status changes.
+    if (current.status !== status) {
+
+      db.prepare(`
+      UPDATE applications
+      SET status = ?
+      WHERE id = ? AND job_id = ?
+    `).run(status, applicationId, id);
+
+      // Record the new status in the application history.
+      db.prepare(`
+      INSERT INTO application_status_history (
+        application_id,
+        status
+      )
+      VALUES (?, ?)
+    `).run(applicationId, status);
+
+      // Task 16.3 - Notify the applicant.
+      notifyStatusChange(applicationId, current.status, status);
+    }
   })();
   return res.json({
     message: 'Application status updated.',
