@@ -70,8 +70,22 @@ router.post('/', (req, res) => {
       `).run(jobId, req.user.id, resumeId ?? null);
 
       const id = Number(result.lastInsertRowid);
+
+      // Task 19.2 - Record the initial application status.
+      db.prepare(`
+  INSERT INTO application_status_history (
+    application_id,
+    status,
+    changed_at
+  )
+  SELECT id, status, applied_at
+  FROM applications
+  WHERE id = ?
+`).run(id);
+
       // Task 16.3 - Tell the recruiter who owns the posting.
       notifyNewApplication(id);
+
       return id;
     })();
 
@@ -270,6 +284,63 @@ router.get('/stats/timeline', requireAuth, (req, res) => {
       error: 'Unable to load application timeline.',
     });
   }
+});
+
+// Task 19.4 - Retrieve application status history.
+// GET /api/applications/:id/history
+router.get('/:id/history', (req, res) => {
+  if (req.user.role !== 'job_seeker') {
+    return res.status(403).json({
+      error: 'Only job seekers can view application history.',
+    });
+  }
+
+  const rawId = req.params.id;
+  const applicationId = Number(rawId);
+
+  if (
+    !/^[1-9]\d*$/.test(rawId) ||
+    !Number.isSafeInteger(applicationId)
+  ) {
+    return res.status(400).json({
+      error: 'Invalid application ID.',
+    });
+  }
+
+  const db = getDb();
+
+  // Ensure the application belongs to the logged-in user.
+  const application = db.prepare(`
+    SELECT id, status, applied_at AS appliedAt
+    FROM applications
+    WHERE id = ? AND user_id = ?
+  `).get(applicationId, req.user.id);
+
+  if (!application) {
+    return res.status(404).json({
+      error: 'Application not found.',
+    });
+  }
+
+  // Retrieve all recorded status changes.
+  const history = db.prepare(`
+    SELECT
+      id,
+      status,
+      changed_at AS changedAt
+    FROM application_status_history
+    WHERE application_id = ?
+    ORDER BY changed_at ASC, id ASC
+  `).all(applicationId);
+
+  res.set('Cache-Control', 'private, no-store');
+
+  return res.json({
+    applicationId: application.id,
+    currentStatus: application.status,
+    appliedAt: application.appliedAt,
+    history,
+  });
 });
 
 

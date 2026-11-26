@@ -1721,6 +1721,7 @@ a {
   outline: 2px solid #2457d6;
   outline-offset: 2px;
 }
+
 /* ==========================================
    NAVIGATION LAYOUT IMPROVEMENTS
    ========================================== */
@@ -1788,6 +1789,7 @@ a {
     flex-wrap: wrap;
   }
 }
+
 .brand-group {
   display: inline-flex;
   align-items: center;
@@ -1812,6 +1814,7 @@ a {
   background: #eaf0ff;
   color: #2457d6;
 }
+
 /* US-16: Notifications */
 
 .nav-badge {
@@ -1901,4 +1904,104 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* US-19 - Application Status History */
+
+.application-history {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.application-history h3 {
+  margin: 0 0 20px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.history-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  padding: 0 0 24px 24px;
+  border-left: 2px solid #cbd5e1;
+  margin-left: 7px;
+}
+
+.history-item:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.history-dot {
+  position: absolute;
+  top: 3px;
+  left: -7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #94a3b8;
+  border: 2px solid #f8fafc;
+}
+
+.history-item-latest .history-dot {
+  background: #2563eb;
+  box-shadow: 0 0 0 4px #dbeafe;
+}
+
+.history-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.history-content strong {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.history-content time {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-current {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.history-empty {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.history-error {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.application-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.application-actions .button {
+  cursor: pointer;
 }
