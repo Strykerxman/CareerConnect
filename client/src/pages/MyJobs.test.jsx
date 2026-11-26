@@ -140,6 +140,54 @@ describe('MyJobs (recruiter dashboard)', () => {
     renderPage();
     expect(await screen.findByRole('heading', { name: 'Sign in page' })).toBeInTheDocument();
   });
+  it('applies application filters, combines them with search, and carries them into applicants', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async url => {
+      const filtered = new URL(url).searchParams.has('applicationStatus');
+      return reply(200, { jobs: [
+        job({ applicationCount: 4, matchingApplicationCount: filtered ? 1 : 4 }),
+        job({ id: 2, title: 'Designer', applicationCount: 2, matchingApplicationCount: filtered ? 0 : 2 }),
+      ] });
+    });
+    renderPage();
+    const toggle = await screen.findByRole('button', { name: 'Filters' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByLabelText('Application status')).not.toBeInTheDocument();
+    await userEvent.click(toggle);
+    await userEvent.selectOptions(screen.getByLabelText('Application status'), 'Interview');
+    await userEvent.type(screen.getByLabelText('Applied from'), '2026-11-01');
+    await userEvent.type(screen.getByLabelText('Applied to'), '2026-11-26');
+    await userEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    const link = await screen.findByRole('link', { name: 'View applicants for Backend Developer' });
+    expect(link).toHaveAttribute('href', '/recruiter/jobs/1/applications?status=Interview&from=2026-11-01&to=2026-11-26');
+    expect(screen.queryByRole('heading', { name: 'Designer' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Application status')).not.toBeInTheDocument();
+    expect(screen.getByText('Applications received').nextElementSibling).toHaveTextContent('6');
+    const url = new URL(spy.mock.calls.at(-1)[0]);
+    expect(Object.fromEntries(url.searchParams)).toEqual({ applicationStatus: 'Interview', from: '2026-11-01', to: '2026-11-26' });
+    await userEvent.type(screen.getByLabelText('Search postings'), 'backend');
+    await userEvent.selectOptions(screen.getByLabelText('Sort by'), 'title');
+    expect(screen.getByRole('link', { name: 'View applicants for Backend Developer' })).toHaveAttribute('href', link.getAttribute('href'));
+    await userEvent.click(screen.getByRole('button', { name: 'Clear application filters' }));
+    await screen.findByRole('heading', { name: 'Backend Developer' });
+    expect(screen.getByLabelText('Search postings')).toHaveValue('backend');
+    expect(screen.getByLabelText('Sort by')).toHaveValue('title');
+    expect(screen.getByRole('link', { name: 'View applicants for Backend Developer' })).toHaveAttribute('href', '/recruiter/jobs/1/applications');
+  });
+
+  it('restores application filters from the URL and validates reversed dates before requesting', async () => {
+    const spy = mockApi({ 'GET /api/recruiter/jobs': () => reply(200, { jobs: [job({ matchingApplicationCount: 1 })] }) });
+    renderPage(undefined, '?applicationStatus=Under+Review&from=2026-11-01&to=2026-11-26');
+    await userEvent.click(await screen.findByRole('button', { name: /Filters/ }));
+    expect(screen.getByLabelText('Application status')).toHaveValue('Under Review');
+    expect(screen.getByLabelText('Applied from')).toHaveValue('2026-11-01');
+    await userEvent.clear(screen.getByLabelText('Applied from'));
+    await userEvent.type(screen.getByLabelText('Applied from'), '2026-12-01');
+    await userEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Applied from must be on or before Applied to.');
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText('Application status')).toBeInTheDocument();
+  });
+
   describe('overview and filtering', () => {
     const portfolio = [
       job({ id: 1, title: 'Backend Developer', company: 'Acme', createdAt: '2026-10-01 09:00:00', applicationCount: 2 }),

@@ -53,7 +53,10 @@ export async function request(path, { method = 'GET', body, signal, responseType
 
 const base = '/api/recruiter/jobs';
 
-export const listMyJobs = options => request(base, options);
+export const listMyJobs = ({ filters = {}, ...options } = {}) => {
+  const query = new URLSearchParams(filters).toString();
+  return request(`${base}${query ? `?${query}` : ''}`, options);
+};
 export const getMyJob = (id, options) => request(`${base}/${id}`, options);
 export const createJob = payload => request(base, { method: 'POST', body: payload });
 export const updateJob = (id, payload) => request(`${base}/${id}`, { method: 'PATCH', body: payload });

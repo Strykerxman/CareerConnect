@@ -175,3 +175,39 @@ describe('applicant filters', () => {
     expect((await list(query, other)).status).toBe(404);
   });
 });
+
+
+describe('dashboard application filters', () => {
+  test('counts applications matching all filters on the same application, with inclusive UTC dates and ownership', async () => {
+    const db = getDb();
+    db.prepare('UPDATE applications SET status = ?, applied_at = ? WHERE id = ?')
+      .run('Interview', '2024-02-29T23:59:59.999Z', applicationId);
+    const otherApplication = await request(app).post('/api/applications').set(auth(secondSeeker)).send({ jobId });
+    db.prepare('UPDATE applications SET status = ?, applied_at = ? WHERE id = ?')
+      .run('Applied', '2024-03-01 00:00:00', otherApplication.body.application.id);
+    const emptyJob = await createJob();
+    await createJob(other);
+    await request(app).post(`/api/recruiter/jobs/${jobId}/close`).set(auth(recruiter));
+    const list = filters => request(app).get('/api/recruiter/jobs').query(filters).set(auth(recruiter));
+    const matched = await list({ applicationStatus: 'Interview', from: '2024-02-29', to: '2024-02-29' });
+    expect(matched.status).toBe(200);
+    expect(matched.body.jobs).toHaveLength(2);
+    expect(matched.body.jobs.find(j => j.id === jobId)).toMatchObject({ applicationCount: 2, matchingApplicationCount: 1, status: 'closed' });
+    expect(matched.body.jobs.find(j => j.id === emptyJob)).toMatchObject({ applicationCount: 0, matchingApplicationCount: 0 });
+    const mismatch = await list({ applicationStatus: 'Interview', from: '2024-03-01' });
+    expect(mismatch.body.jobs.every(j => j.matchingApplicationCount === 0)).toBe(true);
+    const unfiltered = await list({});
+    expect(unfiltered.body.jobs.find(j => j.id === jobId).matchingApplicationCount).toBe(2);
+    const endOnly = await list({ to: '2024-02-29' });
+    expect(endOnly.body.jobs.find(j => j.id === jobId).matchingApplicationCount).toBe(1);
+  });
+
+  test.each([
+    { applicationStatus: 'Hired' }, { applicationStatus: ['Applied', 'Interview'] },
+    { from: '2024-02-30' }, { to: 'invalid' }, { from: '' },
+    { from: '2024-03-01', to: '2024-02-29' },
+  ])('rejects invalid dashboard filters: %j', async filters => {
+    const res = await request(app).get('/api/recruiter/jobs').query(filters).set(auth(recruiter));
+    expect(res.status).toBe(400);
+  });
+});

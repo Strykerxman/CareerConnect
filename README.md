@@ -167,3 +167,18 @@ The authenticated interview API provides:
 
 Cancelled interviews remain in the database for history but are omitted from the
 upcoming list. Notifications are in-app; no email delivery is configured.
+
+## Recruiter dashboard application filters
+
+On **Recruiter dashboard**, open **Filters** beside the search and sort controls.
+Choose an application status and/or **Applied from** / **Applied to**, then select
+**Apply filters**. Only postings with at least one application matching all selected
+criteria appear. Dates are inclusive and use UTC. Search, posting-status tabs, and
+sorting work alongside these filters; overview totals still describe all postings.
+The filter summary stays visible when the panel is collapsed, and **Clear application
+filters** resets these criteria while preserving search and sort. Filters persist in
+the URL and carry into **View applicants**.
+
+`GET /api/recruiter/jobs` accepts `applicationStatus`, `from`, and `to`. It returns the
+owned portfolio with `matchingApplicationCount` on each posting so the dashboard can
+filter without changing summary totals. `applicationCount` remains the total count.

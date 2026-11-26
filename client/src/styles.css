@@ -2022,3 +2022,33 @@ a {
 .application-actions .button {
   cursor: pointer;
 }
+
+/* Expandable application filters on the recruiter dashboard. */
+.dashboard-search input,
+.dashboard-sort select {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.dashboard-filter-toggle { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; }
+.dashboard-filter-toggle[aria-expanded="true"] { border-color: var(--primary); color: var(--primary); }
+.dashboard-filter-count { background: var(--primary-light); color: var(--primary); border-radius: 50%; min-width: 22px; font-size: .8rem; }
+.dashboard-filter-panel { margin: 0 0 18px; padding: 24px; }
+.dashboard-filter-panel h2 { font-size: 1.05rem; margin: 0 0 6px; }
+.dashboard-filter-fields { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 18px; margin-top: 20px; }
+.dashboard-filter-fields .form-group { margin: 0; min-width: 0; }
+.dashboard-filter-fields input, .dashboard-filter-fields select { min-height: 44px; font: inherit; }
+.dashboard-filter-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.dashboard-active-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 14px; margin-bottom: 16px; background: var(--primary-light); border-radius: 8px; font-size: .85rem; }
+.dashboard-active-filters button { margin-left: auto; padding: 4px; background: none; border: 0; color: var(--primary); font: inherit; cursor: pointer; text-decoration: underline; }
+.dashboard-filter-toggle:focus-visible, .dashboard-active-filters button:focus-visible,
+.dashboard-search input:focus-visible, .dashboard-sort select:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .dashboard-filter-fields { grid-template-columns: 1fr; }
+  .dashboard-filter-panel { padding: 18px; }
+  .dashboard-filter-actions .button { flex: 1 1 auto; }
+}

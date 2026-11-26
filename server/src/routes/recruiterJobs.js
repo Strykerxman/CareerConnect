@@ -39,21 +39,33 @@ function notFound(res) {
   return res.status(404).json({ error: 'Job not found.' });
 }
 
-// GET /api/recruiter/jobs?status=open|closed — the recruiter's own postings.
+// GET /api/recruiter/jobs — all owned postings, optionally scoped by posting status.
+// applicationStatus/from/to add a matchingApplicationCount for dashboard filtering;
+// keep applicationCount and the full portfolio intact for the summary cards.
 router.get('/', (req, res) => {
   const { status } = req.query;
   if (status !== undefined && !['open', 'closed'].includes(status)) {
     return res.status(400).json({ error: 'Status must be "open" or "closed".' });
   }
+  const applicationFilters = { status: req.query.applicationStatus, from: req.query.from, to: req.query.to };
+  const error = applicationFilterError(applicationFilters);
+  if (error) return res.status(400).json({ error });
+  const matching = ['a.job_id = j.id'];
+  const matchingParams = [];
+  if (applicationFilters.status) { matching.push('a.status = ?'); matchingParams.push(applicationFilters.status); }
+  if (applicationFilters.from) { matching.push('julianday(a.applied_at) >= julianday(?)'); matchingParams.push(applicationFilters.from); }
+  if (applicationFilters.to) { matching.push('julianday(a.applied_at) < julianday(?) + 1'); matchingParams.push(applicationFilters.to); }
   const params = [req.user.id];
   let where = 'j.recruiter_id = ?';
   if (status) { where += ' AND j.status = ?'; params.push(status); }
 
   const jobs = getDb().prepare(`
-    SELECT ${JOB_COLUMNS} FROM jobs j
+    SELECT ${JOB_COLUMNS},
+      (SELECT COUNT(*) FROM applications a WHERE ${matching.join(' AND ')}) AS matchingApplicationCount
+    FROM jobs j
     WHERE ${where}
     ORDER BY j.created_at DESC, j.id DESC
-  `).all(...params);
+  `).all(...matchingParams, ...params);
   return res.json({ jobs });
 });
 
@@ -119,6 +131,15 @@ function validDate(value) {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+function applicationFilterError({ status, from, to }) {
+  if (status !== undefined && !APPLICATION_STATUSES.includes(status)) return 'Choose a valid application status.';
+  if ((from !== undefined && !validDate(from)) || (to !== undefined && !validDate(to))) {
+    return 'Application dates must be valid calendar dates in YYYY-MM-DD format.';
+  }
+  if (from && to && from > to) return 'Applied from must be on or before Applied to.';
+  return '';
+}
+
 router.get('/:id/applications', (req, res) => {
   const id = parseId(req, res);
   if (id === null) return undefined;
@@ -126,15 +147,8 @@ router.get('/:id/applications', (req, res) => {
   if (!job) return notFound(res);
 
   const { status, from, to } = req.query;
-  if (status !== undefined && !APPLICATION_STATUSES.includes(status)) {
-    return res.status(400).json({ error: 'Choose a valid application status.' });
-  }
-  if ((from !== undefined && !validDate(from)) || (to !== undefined && !validDate(to))) {
-    return res.status(400).json({ error: 'Application dates must be valid calendar dates in YYYY-MM-DD format.' });
-  }
-  if (from && to && from > to) {
-    return res.status(400).json({ error: 'Applied from must be on or before Applied to.' });
-  }
+  const error = applicationFilterError({ status, from, to });
+  if (error) return res.status(400).json({ error });
 
   const conditions = ['a.job_id = ?'];
   const params = [id];

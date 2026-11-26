@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { closeJob, deleteJob, listMyJobs, reopenJob } from '../recruiterJobsApi';
+
+const APPLICATION_STATUSES = ['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'];
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -53,6 +55,10 @@ function MyJobs() {
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState(null);
 
+  const filterToggle = useRef(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [validation, setValidation] = useState('');
+
   // Filters live in the URL so a refresh or shared link keeps the same view.
   const statusParam = searchParams.get('status');
   const sortParam = searchParams.get('sort');
@@ -60,12 +66,25 @@ function MyJobs() {
   const sort = SORT_OPTIONS.some(o => o.value === sortParam) ? sortParam : 'newest';
   const query = searchParams.get('q') || '';
 
+  const applicationStatus = searchParams.get('applicationStatus') || '';
+  const from = searchParams.get('from') || '';
+  const to = searchParams.get('to') || '';
+  const filterCount = [applicationStatus, from, to].filter(Boolean).length;
+  const [draft, setDraft] = useState({ applicationStatus, from, to });
+  useEffect(() => {
+    setDraft({ applicationStatus, from, to });
+    setValidation('');
+  }, [applicationStatus, from, to]);
+
   function updateFilters(changes) {
-    const next = { status, sort, q: query, ...changes };
+    const next = { status, sort, q: query, applicationStatus, from, to, ...changes };
     const params = new URLSearchParams();
     if (next.status !== 'all') params.set('status', next.status);
     if (next.sort !== 'newest') params.set('sort', next.sort);
     if (next.q) params.set('q', next.q);
+    for (const key of ['applicationStatus', 'from', 'to']) {
+      if (next[key]) params.set(key, next[key]);
+    }
     setSearchParams(params, { replace: true });
   }
 
@@ -82,7 +101,8 @@ function MyJobs() {
     setLoading(true);
     setError('');
 
-    listMyJobs({ signal: controller.signal })
+    const filters = Object.fromEntries(Object.entries({ applicationStatus, from, to }).filter(([, value]) => value));
+    listMyJobs({ filters, signal: controller.signal })
       .then(data => {
         if (!Array.isArray(data?.jobs)) throw new Error('Invalid response.');
         setJobs(data.jobs);
@@ -101,7 +121,7 @@ function MyJobs() {
 
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  }, [attempt, applicationStatus, from, to]);
 
   const totals = useMemo(() => {
     const open = jobs.filter(job => job.status === 'open').length;
@@ -116,11 +136,36 @@ function MyJobs() {
   const visibleJobs = useMemo(() => {
     const term = query.trim().toLowerCase();
     const filtered = jobs.filter(job =>
-      (status === 'all' || job.status === status) && (!term || matchesSearch(job, term)));
+      (status === 'all' || job.status === status) && (!term || matchesSearch(job, term)) &&
+      (!filterCount || job.matchingApplicationCount > 0));
     return sortJobs(filtered, sort);
-  }, [jobs, status, sort, query]);
+  }, [jobs, status, sort, query, filterCount]);
 
-  const filtersActive = status !== 'all' || query.trim() !== '';
+  function applyApplicationFilters(event) {
+    event.preventDefault();
+    if (draft.from && draft.to && draft.from > draft.to) {
+      setValidation('Applied from must be on or before Applied to.');
+      return;
+    }
+    setValidation('');
+    updateFilters(draft);
+    setFiltersOpen(false);
+    filterToggle.current?.focus();
+  }
+
+  function clearApplicationFilters() {
+    setDraft({ applicationStatus: '', from: '', to: '' });
+    setValidation('');
+    updateFilters({ applicationStatus: '', from: '', to: '' });
+  }
+
+  function applicantsLink(id) {
+    const params = new URLSearchParams();
+    if (applicationStatus) params.set('status', applicationStatus);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return `/recruiter/jobs/${id}/applications${params.size ? `?${params}` : ''}`;
+  }
 
   async function runAction(job, action, onSuccess) {
     setBusyId(job.id);
@@ -143,7 +188,7 @@ function MyJobs() {
   function toggleStatus(job) {
     const closing = job.status === 'open';
     runAction(job, closing ? closeJob : reopenJob, result => {
-      setJobs(previous => previous.map(item => (item.id === job.id ? result.job : item)));
+      setJobs(previous => previous.map(item => (item.id === job.id ? { ...item, ...result.job } : item)));
       setFlash(closing
         ? 'Job posting closed. It is now hidden from job seekers.'
         : 'Job posting reopened. It is visible to job seekers again.');
@@ -219,7 +264,54 @@ function MyJobs() {
                 ))}
               </select>
             </div>
+            <button type="button" className="button secondary dashboard-filter-toggle" ref={filterToggle}
+              aria-expanded={filtersOpen} aria-controls="posting-application-filters"
+              onClick={() => setFiltersOpen(open => !open)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="var(--surface)" /><circle cx="15" cy="17" r="3" fill="var(--surface)" />
+              </svg>
+              Filters{filterCount > 0 && <span className="dashboard-filter-count">{filterCount}</span>}
+              <span aria-hidden="true">{filtersOpen ? '⌃' : '⌄'}</span>
+            </button>
           </div>
+
+          {filtersOpen && (
+            <form id="posting-application-filters" className="card dashboard-filter-panel" onSubmit={applyApplicationFilters}>
+              <h2>Filter by applications</h2>
+              <p className="field-help">Show postings with at least one application matching all selected filters. Dates use UTC.</p>
+              <div className="dashboard-filter-fields">
+                <div className="form-group">
+                  <label htmlFor="posting-application-status">Application status</label>
+                  <select id="posting-application-status" value={draft.applicationStatus}
+                    onChange={event => setDraft({ ...draft, applicationStatus: event.target.value })}>
+                    <option value="">All statuses</option>
+                    {APPLICATION_STATUSES.map(value => <option key={value} value={value}>{value}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="posting-applied-from">Applied from</label>
+                  <input id="posting-applied-from" type="date" value={draft.from}
+                    onChange={event => setDraft({ ...draft, from: event.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="posting-applied-to">Applied to</label>
+                  <input id="posting-applied-to" type="date" value={draft.to}
+                    onChange={event => setDraft({ ...draft, to: event.target.value })} />
+                </div>
+              </div>
+              {validation && <p className="banner error" role="alert">{validation}</p>}
+              <div className="dashboard-filter-actions">
+                <button type="button" className="button secondary" onClick={clearApplicationFilters}>Clear application filters</button>
+                <button type="submit" className="button primary">Apply filters</button>
+              </div>
+            </form>
+          )}
+          {filterCount > 0 && (
+            <div className="dashboard-active-filters">
+              <span>Applications: {[applicationStatus, from && `from ${from}`, to && `to ${to}`].filter(Boolean).join(' · ')}</span>
+              <button type="button" onClick={clearApplicationFilters}>Clear application filters</button>
+            </div>
+          )}
 
           <div className="dashboard-tabs" role="group" aria-label="Filter by status">
             {STATUS_FILTERS.map(filter => (
@@ -282,7 +374,7 @@ function MyJobs() {
 
                       <div className="posting-actions">
                         <Link
-                          to={`/recruiter/jobs/${job.id}/applications`}
+                          to={applicantsLink(job.id)}
                           className="button secondary"
                           aria-label={`View applicants for ${job.title}`}
                         >
