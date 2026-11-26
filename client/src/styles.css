@@ -1993,3 +1993,15 @@ a {
   color: #dc2626;
   font-size: 14px;
 }
+
+.application-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.application-actions .button {
+  cursor: pointer;
+}

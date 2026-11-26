@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ApplicationHistory from '../components/ApplicationHistory';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -7,6 +9,15 @@ export default function MyApplications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Task 19.6 - Track the expanded application history.
+  const [expandedApplicationId, setExpandedApplicationId] = useState(null);
+
+  function toggleHistory(applicationId) {
+    setExpandedApplicationId(previous =>
+      previous === applicationId ? null : applicationId
+    );
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -87,12 +98,33 @@ export default function MyApplications() {
                 <strong>Applied:</strong> {application.appliedAt}
               </p>
 
-              <Link
-                to={`/jobs/${application.jobId}`}
-                className="button secondary"
-              >
-                View Job
-              </Link>
+              <div className="application-actions">
+                <Link
+                  to={`/jobs/${application.jobId}`}
+                  className="button secondary"
+                >
+                  View Job
+                </Link>
+
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => toggleHistory(application.id)}
+                  aria-expanded={
+                    expandedApplicationId === application.id
+                  }
+                >
+                  {expandedApplicationId === application.id
+                    ? 'Hide History'
+                    : 'View History'}
+                </button>
+              </div>
+
+              {expandedApplicationId === application.id && (
+                <ApplicationHistory
+                  applicationId={application.id}
+                />
+              )}
             </article>
           ))}
         </div>
