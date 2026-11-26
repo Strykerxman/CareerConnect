@@ -8,6 +8,8 @@ const { getDb } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { extractResumeText, ResumeTextError } = require('../resumeText');
 const resumeFeedback = require('../resumeFeedback');
+const resumeMatch = require('../resumeMatch');
+const { requireRole } = require('../middleware/requireRole');
 
 const router = express.Router();
 
@@ -193,6 +195,33 @@ router.get('/:id/view', requireAuth, async (req, res) => {
 // --------------------------------------------------
 // US-15 — AI Resume Feedback
 // --------------------------------------------------
+
+// Private, on-demand preparation report for an owned resume and an open job.
+router.post('/:id/match', requireAuth, requireRole('job_seeker'), async (req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  const resumeId = Number(req.params.id);
+  const jobId = req.body?.jobId;
+  if (!/^[1-9]\d*$/.test(req.params.id) || !Number.isSafeInteger(resumeId) ||
+      !Number.isSafeInteger(jobId) || jobId < 1) {
+    return res.status(400).json({ error: 'Choose a valid resume and job posting.' });
+  }
+  const db = getDb();
+  const resume = db.prepare('SELECT * FROM resumes WHERE id = ? AND user_id = ?').get(resumeId, req.user.id);
+  if (!resume) return res.status(404).json({ error: 'Resume not found.' });
+  const job = db.prepare("SELECT id, title, description, requirements FROM jobs WHERE id = ? AND status = 'open'").get(jobId);
+  if (!job) return res.status(404).json({ error: 'Job posting is no longer available.' });
+  const filePath = path.join(uploadDirectory, resume.stored_name);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Resume file not found.' });
+  try {
+    const text = await extractResumeText(filePath, resume.file_type);
+    const match = await resumeMatch.analyzeJobMatch(text, job);
+    return res.json({ match });
+  } catch (error) {
+    if (error instanceof ResumeTextError) return res.status(422).json({ error: error.message });
+    if (error instanceof resumeFeedback.FeedbackError) return res.status(error.status).json({ error: error.message });
+    return next(error);
+  }
+});
 
 // Tasks 15.1, 15.2, 15.4 — Analyze one of the user's resumes.
 // The resume file and record are only read, never changed, and the

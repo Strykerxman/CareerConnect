@@ -93,18 +93,18 @@ function toFeedbackError(error) {
 
 // Task 15.2 — Ask Gemini for structured feedback on resume text.
 // The resume text is never logged or stored.
-async function analyzeResume(text, { ai } = {}) {
+async function analyzeStructured(text, { ai, systemPrompt = SYSTEM_PROMPT, responseSchema = RESPONSE_SCHEMA, contents } = {}) {
   if (text.length > MAX_TEXT_LENGTH) {
     throw new FeedbackError(422, 'This resume is too long to analyze. Try a shorter version.');
   }
 
   const request = () => ({
     model: MODEL,
-    contents: `<resume>\n${redactContactInfo(text)}\n</resume>\n\nReview this resume.`,
+    contents: contents || `<resume>\n${redactContactInfo(text)}\n</resume>\n\nReview this resume.`,
     config: {
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: systemPrompt,
       responseMimeType: 'application/json',
-      responseJsonSchema: RESPONSE_SCHEMA,
+      responseJsonSchema: responseSchema,
       abortSignal: AbortSignal.timeout(TIMEOUT_MS),
     },
   });
@@ -123,18 +123,19 @@ async function analyzeResume(text, { ai } = {}) {
     throw toFeedbackError(error);
   }
 
-  // A blocked or empty reply, or one that does not match the schema.
-  let feedback;
   try {
-    feedback = FeedbackSchema.safeParse(JSON.parse(response.text || ''));
+    return JSON.parse(response.text || '');
   } catch {
-    feedback = { success: false };
+    throw new FeedbackError(502, 'Your resume could not be analyzed. Please try again later.');
   }
+}
+
+async function analyzeResume(text, options) {
+  const feedback = FeedbackSchema.safeParse(await analyzeStructured(text, options));
   if (!feedback.success) {
     throw new FeedbackError(502, 'Your resume could not be analyzed. Please try again later.');
   }
-
   return feedback.data;
 }
 
-module.exports = { analyzeResume, redactContactInfo, FeedbackError, FeedbackSchema };
+module.exports = { analyzeResume, analyzeStructured, redactContactInfo, FeedbackError, FeedbackSchema };

@@ -182,3 +182,29 @@ the URL and carry into **View applicants**.
 `GET /api/recruiter/jobs` accepts `applicationStatus`, `from`, and `to`. It returns the
 owned portfolio with `matchingApplicationCount` on each posting so the dashboard can
 filter without changing summary totals. `applicationCount` remains the total count.
+
+## Resume-to-job match
+
+Job seekers can open a job posting, choose an uploaded PDF/DOCX resume, and click
+**Compare resume to this job**. The report includes:
+
+- A resume evidence coverage percentage and matched/partial/missing counts.
+- Requirement-by-requirement explanations, quoted resume evidence, and suggested next steps.
+- Missing keywords from the posting, with a reminder to add only truthful qualifications.
+
+The score gives each AI-extracted requirement equal weight: matched = 1, partial = 0.5,
+missing = 0, divided by the number of requirements. It describes resume evidence,
+not hiring odds or candidate suitability. AI can miss requirements; review the full
+posting. The report supports up to 40 distinct requirements and 20 missing keywords.
+
+This uses the existing `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and optional `GEMINI_MODEL`
+in `server/.env`. Without a key, the comparison shows an unavailable message and can
+be retried. Resume text and posting details are sent to Google Gemini after contact
+redaction; names and other resume content may remain. Google's free tier may use
+inputs to improve models. Reports are private, returned with `no-store`, and are not
+persisted or shared with recruiters. No application is submitted and no resume is edited.
+
+`POST /api/resume/:id/match` accepts `{ "jobId": 123 }`. It requires an authenticated
+job seeker, an owned resume, and an open posting. The server validates structured AI
+output and checks that requirement/evidence quotes occur in the input documents before
+calculating the score. Tests stub Gemini and never send real resumes to the provider.

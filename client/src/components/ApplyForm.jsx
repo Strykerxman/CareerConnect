@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ResumeJobMatch from './ResumeJobMatch';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -130,6 +131,7 @@ export default function ApplyForm({ jobId }) {
           <Link to="/resumes">Upload a resume</Link>
         </p>
       ) : (
+        <>
         <form onSubmit={handleApply}>
           <label htmlFor="application-resume">Choose your resume</label>
 
@@ -157,6 +159,9 @@ export default function ApplyForm({ jobId }) {
             </button>
           </div>
         </form>
+        <ResumeJobMatch key={`${jobId}-${resumeId}`} jobId={jobId} resumeId={resumeId}
+          resumeName={resumes.find(resume => String(resume.id) === resumeId)?.original_name || 'your resume'} />
+        </>
       )}
     </section>
   );
