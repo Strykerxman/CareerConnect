@@ -81,6 +81,22 @@ CREATE TABLE IF NOT EXISTS application_status_history (
 CREATE INDEX IF NOT EXISTS idx_application_status_history
   ON application_status_history (application_id, changed_at, id);
 
+-- Interviews belong to an application, which identifies both participants.
+CREATE TABLE IF NOT EXISTS interviews (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id   INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+  scheduled_at     TEXT NOT NULL,
+  duration_minutes INTEGER NOT NULL CHECK (duration_minutes BETWEEN 1 AND 1440),
+  location         TEXT NOT NULL,
+  notes            TEXT NOT NULL DEFAULT '',
+  status           TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'cancelled')),
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_interviews_application ON interviews (application_id);
+CREATE INDEX IF NOT EXISTS idx_interviews_schedule ON interviews (scheduled_at);
+
 CREATE TABLE IF NOT EXISTS saved_jobs (
   user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   job_id   INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,

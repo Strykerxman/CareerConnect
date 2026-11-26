@@ -46,6 +46,20 @@ erDiagram
     INTEGER job_id PK, FK "deleted with job"
     TEXT saved_at
   }
+  JOBS ||--o{ APPLICATIONS : receives
+  USERS ||--o{ APPLICATIONS : submits
+  APPLICATIONS ||--o{ INTERVIEWS : schedules
+  INTERVIEWS {
+    INTEGER id PK
+    INTEGER application_id FK "deleted with application"
+    TEXT scheduled_at "UTC ISO 8601"
+    INTEGER duration_minutes "1 to 1440"
+    TEXT location "location or meeting link"
+    TEXT notes
+    TEXT status "scheduled | cancelled"
+    TEXT created_at
+    TEXT updated_at
+  }
   USERS ||--o{ NOTIFICATIONS : receives
   NOTIFICATIONS {
     INTEGER id PK
@@ -157,10 +171,14 @@ Notifications are created by the server (Task 16.3, `server/src/notifications.js
 | A job seeker applies to a posting | The recruiter who owns it | `new_application` |
 | A recruiter changes an application's status | The applicant | `application_status` |
 | The new status is `Interview` | The applicant | `interview_invitation` |
+| An interview is scheduled, changed, or cancelled | The applicant | `interview_invitation` |
 | A saved open job's deadline is within 3 days | The job seeker | `deadline_reminder` |
 
 Saving the same status again sends nothing. There is no background scheduler, so deadline
 reminders are created when the job seeker next loads their notifications or unread count.
+Interview notifications are saved in the same transaction as the interview change. They
+link to the interviews page and include the scheduled time in UTC. Saving an interview
+without changing its fields does not generate another notification.
 
 ### Notifications API
 
@@ -178,3 +196,27 @@ signed-in user's own notifications.
 Each notification has `id`, `type`, `title`, `message`, `link`, `isRead` (boolean) and
 `createdAt`. A malformed ID returns HTTP 400; a missing notification, or one that belongs
 to another user, returns HTTP 404. Tests are in `server/tests/notifications.test.js`.
+
+## Interview scheduling
+
+US-18 stores interviews against an application. The application identifies the job,
+recruiter and candidate; deleting the application cascades to its interviews. Multiple
+interviews may be scheduled for an application. `scheduled_at` is a UTC ISO 8601 instant,
+`duration_minutes` is between 1 and 1440, and `status` is `scheduled` or `cancelled`.
+Indexes cover application and scheduled time. Existing databases gain the table at startup.
+
+All interview routes require a bearer token. Recruiters can manage interviews only for
+their own job postings. Job seekers can list only interviews for their own applications.
+
+| Method | Route | Result |
+| --- | --- | --- |
+| `GET` | `/api/interviews` | 200 with `{ "interviews": [...] }` for the signed-in user, ordered by time |
+| `POST` | `/api/interviews` | Recruiter creates an interview for an application; returns 201 |
+| `PATCH` | `/api/interviews/:id` | Recruiter updates a future scheduled interview |
+| `POST` | `/api/interviews/:id/cancel` | Recruiter cancels a future scheduled interview |
+
+Creation takes `applicationId`, `scheduledAt`, `durationMinutes`, `location`, and optional
+`notes`. Updates accept the same fields except `applicationId`. Dates must represent a
+future time and include a UTC offset or `Z`; the server normalizes them to UTC. Malformed
+input returns 400, inaccessible applications or interviews return 404, and attempts to
+change a cancelled or past interview return 409.

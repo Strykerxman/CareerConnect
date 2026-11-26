@@ -63,6 +63,7 @@ function AppLayout() {
             </NavLink> */}
 
             <NotificationsLink className={navClass} />
+            <NavLink to="/interviews" className={navClass}>Interviews</NavLink>
 
             {isRecruiter && (
               <NavLink to="/recruiter/jobs" className={navClass}>

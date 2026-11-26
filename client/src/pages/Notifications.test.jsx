@@ -49,6 +49,7 @@ function renderPage() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/login" element={<p>Login page</p>} />
         <Route path="/applications" element={<p>Applications page</p>} />
+        <Route path="/interviews" element={<p>Interviews page</p>} />
       </Routes>
     </MemoryRouter>
   );
@@ -96,6 +97,16 @@ describe('US-16 - Notifications page', () => {
     renderPage();
     expect(await screen.findByRole('heading', { name: 'No notifications yet.' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mark all as read' })).toBeDisabled();
+  });
+
+  it('shows the specific interview update and links to the interviews page', async () => {
+    const notice = { ...INTERVIEW, title: 'Interview cancelled', link: '/interviews' };
+    mockApi({ 'GET /api/notifications': () => json({ notifications: [notice], unreadCount: 0 }) });
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByText('Interview cancelled')).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'View' }));
+    expect(screen.getByText('Interviews page')).toBeInTheDocument();
   });
 
   it('filters between all and unread notifications', async () => {

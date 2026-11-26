@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import CandidateReview from '../components/CandidateReview';
+import InterviewForm from '../components/InterviewForm';
 import { listApplicants, updateApplicationStatus } from '../recruiterJobsApi';
 
 const STATUSES = ['Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'];
@@ -11,6 +12,8 @@ function Applicant({ jobId, application, onSaved }) {
   const [status, setStatus] = useState(application.status);
   const [saving, setSaving] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [interviewMessage, setInterviewMessage] = useState('');
   const [error, setError] = useState('');
 
   async function save(event) {
@@ -61,6 +64,15 @@ function Applicant({ jobId, application, onSaved }) {
         {reviewing ? 'Close candidate' : 'View candidate'}
       </button>
       {reviewing && <CandidateReview jobId={jobId} applicationId={application.id} />}
+      <div className="interview-actions">
+        <button type="button" className="button secondary" aria-expanded={scheduling}
+          onClick={() => { setScheduling(value => !value); setInterviewMessage(''); }}>
+          {scheduling ? 'Close scheduling' : 'Schedule interview'}
+        </button>
+      </div>
+      {interviewMessage && <p className="banner success" role="status">{interviewMessage} <Link to="/interviews">View interviews</Link></p>}
+      {scheduling && <InterviewForm applicationId={application.id} onCancel={() => setScheduling(false)}
+        onSaved={() => { setScheduling(false); setInterviewMessage('Interview scheduled.'); }} />}
     </article>
   );
 }

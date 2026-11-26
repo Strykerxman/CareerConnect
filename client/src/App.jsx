@@ -17,6 +17,7 @@ import RequireAuth from './components/RequireAuth';
 import MyJobs from './pages/MyJobs';
 import JobForm from './pages/JobForm';
 import JobApplicants from './pages/JobApplicants';
+import Interviews from './pages/Interviews';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/saved-jobs" element={<SavedJobs />} />
           <Route path="/reminders" element={<Reminders />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/interviews" element={<Interviews />} />
           <Route path="/application-stats" element={<ApplicationStats />} />
 
           {/* Job-seeker-only pages */}

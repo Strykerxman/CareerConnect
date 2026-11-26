@@ -144,3 +144,26 @@ If the resume was not attached or has been deleted, the panel says it is unavail
 Other recruiters cannot open the candidate or resume through these routes.
 
 Tracked in #141.
+
+## Interview scheduling
+
+Recruiters can open **View applicants** on a posting and schedule an interview
+for a candidate. Enter a future date and time, duration, location or meeting link,
+and optional notes. The **Interviews** page shows upcoming interviews and lets the
+recruiter change or cancel them. Job seekers see their own upcoming interviews on
+the same page and receive in-app notifications when an interview is scheduled,
+changed, or cancelled. Times are entered and displayed in the browser's local time
+zone; the API stores the corresponding UTC instant.
+
+The authenticated interview API provides:
+
+- `GET /api/interviews` returns interviews for the signed-in job seeker or recruiter.
+- `POST /api/interviews` schedules an interview for an application on the
+  recruiter's own job, with `applicationId`, `scheduledAt` (ISO 8601 with a time
+  zone), `durationMinutes`, `location`, and optional `notes`.
+- `PATCH /api/interviews/:id` updates scheduling details, and
+  `POST /api/interviews/:id/cancel` cancels an interview. These operations are
+  restricted to the recruiter who owns the posting.
+
+Cancelled interviews remain in the database for history but are omitted from the
+upcoming list. Notifications are in-app; no email delivery is configured.
