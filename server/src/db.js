@@ -64,6 +64,22 @@ CREATE TABLE IF NOT EXISTS applications (
   applied_at   TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(job_id, user_id)
 );
+CREATE TABLE IF NOT EXISTS application_status_history (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  application_id INTEGER NOT NULL
+                 REFERENCES applications(id) ON DELETE CASCADE,
+  status         TEXT NOT NULL CHECK (status IN (
+                   'Applied',
+                   'Under Review',
+                   'Interview',
+                   'Offered',
+                   'Rejected'
+                 )),
+  changed_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_application_status_history
+  ON application_status_history (application_id, changed_at, id);
 
 CREATE TABLE IF NOT EXISTS saved_jobs (
   user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
