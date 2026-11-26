@@ -70,8 +70,22 @@ router.post('/', (req, res) => {
       `).run(jobId, req.user.id, resumeId ?? null);
 
       const id = Number(result.lastInsertRowid);
+
+      // Task 19.2 - Record the initial application status.
+      db.prepare(`
+  INSERT INTO application_status_history (
+    application_id,
+    status,
+    changed_at
+  )
+  SELECT id, status, applied_at
+  FROM applications
+  WHERE id = ?
+`).run(id);
+
       // Task 16.3 - Tell the recruiter who owns the posting.
       notifyNewApplication(id);
+
       return id;
     })();
 
