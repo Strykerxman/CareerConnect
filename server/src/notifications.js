@@ -73,6 +73,39 @@ function notifyStatusChange(applicationId, previousStatus, newStatus) {
   });
 }
 
+// Interview changes are recorded in the same transaction as their notification.
+function notifyInterviewEvent(interviewId, event) {
+  const labels = {
+    scheduled: ['Interview scheduled', 'scheduled'],
+    rescheduled: ['Interview rescheduled', 'rescheduled'],
+    updated: ['Interview updated', 'updated'],
+    cancelled: ['Interview cancelled', 'cancelled'],
+  };
+  if (!labels[event]) throw new Error('Unknown interview notification event.');
+
+  const row = getDb().prepare(`
+    SELECT a.user_id AS userId, j.title, j.company,
+           i.scheduled_at AS scheduledAt, i.location
+    FROM interviews i
+    JOIN applications a ON a.id = i.application_id
+    JOIN jobs j ON j.id = a.job_id
+    WHERE i.id = ?
+  `).get(interviewId);
+  if (!row) throw new Error('Interview not found for notification.');
+
+  const time = new Date(row.scheduledAt).toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+  const message = event === 'cancelled'
+    ? `Your interview for ${row.title} at ${row.company}, originally scheduled for ${time}, has been cancelled.`
+    : `Your interview for ${row.title} at ${row.company} has been ${labels[event][1]} for ${time} at ${row.location}.`;
+  createNotification({
+    userId: row.userId,
+    type: 'interview_invitation',
+    title: labels[event][0],
+    message,
+    link: '/interviews',
+  });
+}
+
 // Saved open jobs whose deadline is within the window get one reminder each.
 // There is no background scheduler, so this runs whenever the job seeker
 // loads their notifications. The unique index makes repeat calls a no-op.
@@ -107,6 +140,7 @@ module.exports = {
   createNotification,
   notifyNewApplication,
   notifyStatusChange,
+  notifyInterviewEvent,
   createDeadlineReminders,
   DEADLINE_WINDOW_DAYS,
 };

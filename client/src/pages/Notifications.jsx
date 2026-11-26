@@ -182,7 +182,7 @@ function Notifications() {
                 <li key={n.id} className={`card notification ${n.isRead ? 'is-read' : 'is-unread'}`}>
                   <div className="notification-meta">
                     <span className={`notification-type type-${n.type}`}>
-                      {TYPE_LABELS[n.type] || n.title}
+                      {n.type === 'interview_invitation' ? n.title : (TYPE_LABELS[n.type] || n.title)}
                     </span>
                     {!n.isRead && <span className="notification-dot">Unread</span>}
                     <time dateTime={n.createdAt}>{formatTime(n.createdAt)}</time>
