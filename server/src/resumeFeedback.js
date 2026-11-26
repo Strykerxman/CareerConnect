@@ -56,14 +56,16 @@ function redactContactInfo(text) {
     .replace(/(?:\+?\d{1,2}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g, '[phone]');
 }
 
-let client;
-function getClient() {
-  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
-    console.error('AI resume feedback: GEMINI_API_KEY is not set.');
+const clients = new Map();
+// keyEnv lets each feature use its own key (e.g. GEMINI_MATCH_API_KEY), falling back to the shared one.
+function getClient(keyEnv) {
+  const apiKey = (keyEnv && process.env[keyEnv]) || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.error(`AI resume feedback: ${keyEnv || 'GEMINI_API_KEY'} is not set.`);
     throw new FeedbackError(503, 'AI feedback is not available right now.');
   }
-  if (!client) client = new GoogleGenAI({});
-  return client;
+  if (!clients.has(apiKey)) clients.set(apiKey, new GoogleGenAI({ apiKey }));
+  return clients.get(apiKey);
 }
 
 // Turn Gemini failures into messages that are safe to show to users.
@@ -93,7 +95,7 @@ function toFeedbackError(error) {
 
 // Task 15.2 — Ask Gemini for structured feedback on resume text.
 // The resume text is never logged or stored.
-async function analyzeStructured(text, { ai, systemPrompt = SYSTEM_PROMPT, responseSchema = RESPONSE_SCHEMA, contents } = {}) {
+async function analyzeStructured(text, { ai, keyEnv = 'GEMINI_FEEDBACK_API_KEY', systemPrompt = SYSTEM_PROMPT, responseSchema = RESPONSE_SCHEMA, contents } = {}) {
   if (text.length > MAX_TEXT_LENGTH) {
     throw new FeedbackError(422, 'This resume is too long to analyze. Try a shorter version.');
   }
@@ -111,7 +113,7 @@ async function analyzeStructured(text, { ai, systemPrompt = SYSTEM_PROMPT, respo
 
   let response;
   try {
-    const gemini = ai || getClient();
+    const gemini = ai || getClient(keyEnv);
     try {
       response = await gemini.models.generateContent(request());
     } catch (error) {

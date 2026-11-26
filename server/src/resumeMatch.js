@@ -37,7 +37,7 @@ async function analyzeJobMatch(text, job, options = {}) {
   const resume = redactContactInfo(text);
   const redactedPosting = redactContactInfo(posting);
   const raw = await analyzeStructured(text, {
-    ...options, systemPrompt: SYSTEM_PROMPT, responseSchema,
+    keyEnv: 'GEMINI_MATCH_API_KEY', ...options, systemPrompt: SYSTEM_PROMPT, responseSchema,
     contents: JSON.stringify({ resume, jobPosting: redactedPosting }),
   });
   const parsed = MatchSchema.safeParse(raw);

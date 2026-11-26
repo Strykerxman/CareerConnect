@@ -225,6 +225,7 @@ describe('Tasks 15.2 / 15.4 - AI analysis', () => {
     const saved = { gemini: process.env.GEMINI_API_KEY, google: process.env.GOOGLE_API_KEY };
     delete process.env.GEMINI_API_KEY;
     delete process.env.GOOGLE_API_KEY;
+    delete process.env.GEMINI_FEEDBACK_API_KEY;
     jest.spyOn(console, 'error').mockImplementation(() => {});
 
     try {
